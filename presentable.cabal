@@ -25,13 +25,24 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Presentable
+      Presentable.App.Env
+      Presentable.App.Monad
+      Presentable.App.State
+      Presentable.Data.Presentation
+      Presentable.Parse.Presentation
+      Presentable.UI.Brick
   other-modules:
       Paths_presentable
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , brick
+    , megaparsec
+    , mtl
+    , text
+    , vty
   default-language: Haskell2010
 
 executable presentable
@@ -43,6 +54,7 @@ executable presentable
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , optparse-applicative
     , presentable
   default-language: Haskell2010
 
@@ -50,11 +62,14 @@ test-suite presentable-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Presentable.Parse.PresentationSpec
       Paths_presentable
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , hspec
     , presentable
+    , text
   default-language: Haskell2010

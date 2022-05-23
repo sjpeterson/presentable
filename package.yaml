@@ -24,6 +24,12 @@ dependencies:
 
 library:
   source-dirs: src
+  dependencies:
+  - brick
+  - megaparsec
+  - mtl
+  - text
+  - vty
 
 executables:
   presentable:
@@ -34,6 +40,7 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - optparse-applicative
     - presentable
 
 tests:
@@ -45,4 +52,6 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - hspec
     - presentable
+    - text
