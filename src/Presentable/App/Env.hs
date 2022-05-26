@@ -9,10 +9,11 @@
 module Presentable.App.Env where
 
 import Presentable.Config ( Config ( Config, configMaxDimensions ) )
-import Presentable.Data.Slideshow ( Dimensions, Slideshow )
+import Presentable.Data.Geometry ( Rect )
+import Presentable.Data.Slideshow ( Slideshow )
 
 data AppEnv = AppEnv
-    { maxDimensions :: Dimensions
+    { maxDimensions :: Rect
     , slideshow :: Slideshow
     }
 

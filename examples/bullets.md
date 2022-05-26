@@ -6,4 +6,15 @@ Bullet list example
 
 - This example highligts some features of bullet list slides
 - Markdown line-continuation 
-  is automatically unwrapped
+  is supported
+  for as many lines as you please
+- You
+  can
+  continue
+  on
+  as
+  many
+  lines
+  as
+  you
+  please

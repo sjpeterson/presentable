@@ -45,33 +45,36 @@ import Brick
     , padRight
     , str
     , txt
+    , txtWrap
     , vBox
     , vLimit
     , withAttr
     )
 import Brick.Widgets.Center as C
 import qualified Graphics.Vty as V
-import Lens.Micro ( (^.) )
+import Lens.Micro ( (^.), over, set )
 
 import Presentable.App.Env ( AppEnv ( slideshow ) )
 import Presentable.App.State ( AppState
                              , appStateSlidesBuffer
                              , initState
-                             , nextSlide
-                             , prevSlide
                              )
-import Presentable.Data.Buffer ( bufferCurrent )
+import Presentable.Data.Buffer ( bufferCurrent, bufferOf, next, prev )
+import Presentable.Data.Geometry ( Rect ( Rect ) )
 import Presentable.Data.Slideshow ( Slide ( TitleSlide, SingleContentSlide )
                                   , SlideContent ( BulletList, NoContent )
-                                  , Slideshow ( slideshowCopyright )
+                                  , Slideshow ( slideshowCopyright
+                                              , slideshowSlides
+                                              )
                                   )
+import Presentable.Process.Slideshow ( fitTo )
 
 type Name = ()
 
 app :: AppEnv -> App AppState e Name
 app appEnv = App { appDraw = drawUI appEnv
                  , appChooseCursor = neverShowCursor
-                 , appHandleEvent = handleEvent
+                 , appHandleEvent = handleEvent appEnv
                  , appStartEvent = return
                  , appAttrMap = const attributeMap
                  }
@@ -108,13 +111,26 @@ drawContent (BulletList items) = padRight Max $
     vBox $ map drawBulletListItem items
 
 drawBulletListItem :: Text -> Widget Name
-drawBulletListItem = (<+>) (withAttr bulletAttr (txt "• ")) . txt
+drawBulletListItem = (<+>) (withAttr bulletAttr (txt "• ")) . txtWrap
 
-handleEvent :: AppState -> BrickEvent Name e -> EventM Name (Next AppState)
-handleEvent s (VtyEvent (V.EvKey V.KEsc   [])) = halt s
-handleEvent s (VtyEvent (V.EvKey V.KRight [])) = continue $ nextSlide s
-handleEvent s (VtyEvent (V.EvKey V.KLeft  [])) = continue $ prevSlide s
-handleEvent s _                                = continue $ s
+handleEvent :: AppEnv
+            -> AppState
+            -> BrickEvent Name e
+            -> EventM Name (Next AppState)
+handleEvent appEnv appState event = case event of
+    (VtyEvent (V.EvKey V.KEsc   []))     -> halt appState
+    (VtyEvent (V.EvKey V.KRight []))     -> continue nextSlide
+    (VtyEvent (V.EvKey V.KLeft  []))     -> continue prevSlide
+    (VtyEvent (V.EvResize columns rows)) -> continue $
+        fitSlides (Rect columns rows)
+    _                                    -> continue appState
+  where
+    nextSlide = over appStateSlidesBuffer next appState
+    prevSlide = over appStateSlidesBuffer prev appState
+    fitSlides rect = set
+        appStateSlidesBuffer
+        (bufferOf $ fitTo rect $ slideshowSlides $ slideshow appEnv)
+        appState
 
 attributeMap :: AttrMap
 attributeMap = attrMap V.defAttr

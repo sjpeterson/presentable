@@ -15,6 +15,7 @@ module Presentable.Parse.Slideshow
 
 import Data.Bifunctor ( first )
 import Data.Functor ( void )
+import Data.List.NonEmpty ( NonEmpty ( (:|) ) )
 import Data.Maybe ( isJust )
 import Data.Text ( Text )
 import qualified Data.Text as T
@@ -68,7 +69,7 @@ slideshowParser = do
     subtitle <- optional $ try solitaryLineParser
     let titleSlide = TitleSlide title subtitle
     slides <- many slideParser
-    return $ Slideshow copyright (titleSlide:slides)
+    return $ Slideshow copyright (titleSlide :| slides)
 
 heading1Parser :: Parser Text
 heading1Parser = between (string "# ") (optional eol) nonTag

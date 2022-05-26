@@ -31,8 +31,10 @@ library
       Presentable.App.State
       Presentable.Config
       Presentable.Data.Buffer
+      Presentable.Data.Geometry
       Presentable.Data.Slideshow
       Presentable.Parse.Slideshow
+      Presentable.Process.Slideshow
       Presentable.UI.Brick
   other-modules:
       Paths_presentable

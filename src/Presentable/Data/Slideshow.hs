@@ -7,13 +7,14 @@
 
 module Presentable.Data.Slideshow where
 
+import Data.List.NonEmpty ( NonEmpty )
 import Data.Text ( Text, unpack )
 
 type Title = Text
 
 data Slideshow =
     Slideshow { slideshowCopyright :: Maybe Copyright
-              , slideshowSlides :: [Slide]
+              , slideshowSlides :: NonEmpty Slide
               } deriving ( Show, Eq )
 
 data Slide = TitleSlide Title (Maybe Text)
@@ -40,8 +41,3 @@ instance Show Copyright where
 data CopyrightYear = SingleYear Int
                    | YearRange Int Int
                         deriving ( Show, Eq )
-
-data Dimensions =
-    Dimensions { dimensionsColumns :: Int
-               , dimensionsRows :: Int
-               } deriving ( Show, Eq )

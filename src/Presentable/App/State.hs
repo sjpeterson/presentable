@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns  #-}
 {-# LANGUAGE RecordWildCards #-}
 
 -- |
@@ -12,7 +13,7 @@ module Presentable.App.State where
 import Lens.Micro ( Lens', lens, over )
 
 import Presentable.App.Env ( AppEnv ( AppEnv, slideshow ) )
-import Presentable.Data.Buffer ( Buffer ( Buffer ), next, prev )
+import Presentable.Data.Buffer ( Buffer ( Buffer ), bufferOf, next, prev )
 import Presentable.Data.Slideshow
     ( Slideshow ( Slideshow, slideshowSlides )
     , Slide
@@ -28,13 +29,6 @@ appStateSlidesBuffer = lens
     (\appState b -> appState { _appStateSlidesBuffer = b })
 
 initState :: AppEnv -> AppState
-initState AppEnv {..} =
-    AppState $ Buffer titleSlide nextSlides []
+initState AppEnv {..} = AppState {..}
   where
-    titleSlide:nextSlides = slideshowSlides slideshow
-
-nextSlide :: AppState -> AppState
-nextSlide = over appStateSlidesBuffer next
-
-prevSlide :: AppState -> AppState
-prevSlide = over appStateSlidesBuffer prev
+    _appStateSlidesBuffer = bufferOf $ slideshowSlides slideshow
