@@ -27,6 +27,7 @@ library:
   dependencies:
   - brick
   - megaparsec
+  - microlens
   - mtl
   - text
   - vty

@@ -8,15 +8,16 @@
 --
 -- Presentation parser for Presentable
 
-module Presentable.Parse.Presentation
-    ( parsePresentation
+module Presentable.Parse.Slideshow
+    ( parseSlideshow
     , parseSlide
     ) where
 
 import Data.Bifunctor ( first )
 import Data.Functor ( void )
 import Data.Maybe ( isJust )
-import Data.Text ( Text, pack, strip )
+import Data.Text ( Text )
+import qualified Data.Text as T
 import Data.Void ( Void )
 import Text.Megaparsec ( Parsec
                        , ParseErrorBundle ( ParseErrorBundle )
@@ -40,33 +41,34 @@ import Text.Megaparsec ( Parsec
                        )
 import Text.Megaparsec.Char ( char, digitChar, eol, hspace, space, string )
 
-import Presentable.Data.Presentation ( Copyright ( Copyright )
-                                     , CopyrightYear ( SingleYear, YearRange )
-                                     , Presentation ( Presentation )
-                                     , Slide ( Slide )
-                                     , SlideContent ( BulletList, NoContent )
-                                     )
+import Presentable.Data.Slideshow ( Copyright ( Copyright )
+                                  , CopyrightYear ( SingleYear, YearRange )
+                                  , Slideshow ( Slideshow )
+                                  , Slide ( SingleContentSlide, TitleSlide )
+                                  , SlideContent ( BulletList, NoContent )
+                                  )
 
 type Parser = Parsec Void Text
 
 type ParsingError = Text
 
-parsePresentation :: FilePath -> Text -> Either ParsingError Presentation
-parsePresentation filePath = first handleError . runParser presentationParser filePath
+parseSlideshow :: FilePath -> Text -> Either ParsingError Slideshow
+parseSlideshow filePath = first handleError . runParser slideshowParser filePath
 
 parseSlide :: FilePath -> Text -> Either ParsingError Slide
 parseSlide filePath = first handleError . runParser slideParser filePath
 
 handleError :: ParseErrorBundle Text Void -> ParsingError
-handleError = pack . errorBundlePretty
+handleError = T.pack . errorBundlePretty
 
-presentationParser :: Parser Presentation
-presentationParser = do
+slideshowParser :: Parser Slideshow
+slideshowParser = do
     copyright <- optional copyrightParser
     title <- heading1Parser
     subtitle <- optional $ try solitaryLineParser
+    let titleSlide = TitleSlide title subtitle
     slides <- many slideParser
-    return $ Presentation title subtitle copyright slides
+    return $ Slideshow copyright (titleSlide:slides)
 
 heading1Parser :: Parser Text
 heading1Parser = between (string "# ") (optional eol) nonTag
@@ -103,7 +105,7 @@ slideParser :: Parser Slide
 slideParser = do
     title <- heading2Parser
     content <- slideContentParser
-    return $ Slide title content
+    return $ SingleContentSlide title content
 
 heading2Parser :: Parser Text
 heading2Parser = between
@@ -118,7 +120,7 @@ bulletListParser :: Parser SlideContent
 bulletListParser = emptyLine >> BulletList <$> some bulletListItemParser
 
 bulletListItemParser :: Parser Text
-bulletListItemParser = between (string "- ") (optional eol) nonTag
+bulletListItemParser = between (string "- ") (optional eol) (continuedLine 2)
 
 noContentParser :: Parser SlideContent
 noContentParser = lookAhead (space >> try eof <|> void (char '#'))
@@ -138,5 +140,17 @@ withLeadingSpace :: Parser a -> Parser a
 withLeadingSpace p = char ' ' >> p
 
 restOfLine :: Parser Text
-restOfLine = strip . pack <$> some (anySingleBut '\n')
+restOfLine = T.strip . T.pack <$> some (anySingleBut '\n')
+
+continuedLine :: Int -> Parser Text
+continuedLine indentationLevel = do
+    first <- T.strip . T.pack <$> some (anySingleBut '\n')
+    continuation <- optional $
+        try (continuationMatch >> continuedLine indentationLevel)
+    return $ case continuation of
+        Nothing -> first
+        Just c -> T.unwords [first, c]
+  where
+    continuationMatch =
+        string $ T.append "\n" (T.replicate indentationLevel " ")
 

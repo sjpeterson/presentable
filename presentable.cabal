@@ -29,8 +29,10 @@ library
       Presentable.App.Env
       Presentable.App.Monad
       Presentable.App.State
-      Presentable.Data.Presentation
-      Presentable.Parse.Presentation
+      Presentable.Config
+      Presentable.Data.Buffer
+      Presentable.Data.Slideshow
+      Presentable.Parse.Slideshow
       Presentable.UI.Brick
   other-modules:
       Paths_presentable
@@ -40,6 +42,7 @@ library
       base >=4.7 && <5
     , brick
     , megaparsec
+    , microlens
     , mtl
     , text
     , vty
@@ -62,7 +65,8 @@ test-suite presentable-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Presentable.Parse.PresentationSpec
+      Presentable.Data.SlideshowSpec
+      Presentable.Parse.SlideshowSpec
       Paths_presentable
   hs-source-dirs:
       test

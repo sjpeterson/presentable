@@ -15,13 +15,13 @@ import Options.Applicative ( Parser
 
 import Presentable ( runApp )
 
-data Options = Options { optionsPresentationFile :: FilePath }
+data Options = Options { optionsSlideshowFile :: FilePath }
 
 options :: Parser Options
 options = Options <$> argument str (metavar "FILE")
 
 main :: IO ()
-main = runApp . optionsPresentationFile =<< execParser opts
+main = runApp . optionsSlideshowFile =<< execParser opts
   where
     opts = info (options <**> helper)
       ( fullDesc

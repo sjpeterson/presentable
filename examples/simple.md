@@ -1,4 +1,4 @@
-@copyright 2022 Stefan Peterson
+@copyright 2022 Author Example
 
 # Presentable
 
