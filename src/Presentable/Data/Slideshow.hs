@@ -19,6 +19,7 @@ data Slideshow =
 
 data Slide = TitleSlide Title (Maybe Text)
            | SingleContentSlide Title SlideContent
+           | ErrorSlide Text
                deriving ( Show, Eq )
 
 data SlideContent = BulletList [Text]

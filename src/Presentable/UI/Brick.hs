@@ -61,7 +61,10 @@ import Presentable.App.State ( AppState
                              )
 import Presentable.Data.Buffer ( bufferCurrent, bufferOf, next, prev )
 import Presentable.Data.Geometry ( Rect ( Rect ) )
-import Presentable.Data.Slideshow ( Slide ( TitleSlide, SingleContentSlide )
+import Presentable.Data.Slideshow ( Slide ( ErrorSlide
+                                          , TitleSlide
+                                          , SingleContentSlide
+                                          )
                                   , SlideContent ( BulletList, NoContent )
                                   , Slideshow ( slideshowCopyright
                                               , slideshowSlides
@@ -104,6 +107,7 @@ drawSlide (SingleContentSlide title content) = padBottom Max $
     vBox [ padBottom (Pad 1) $ withAttr titleAttr $ txt title
          , drawContent content
          ]
+drawSlide (ErrorSlide message) = withAttr errorAttr $ txtWrap message
 
 drawContent :: SlideContent -> Widget Name
 drawContent NoContent          = emptyWidget
@@ -136,8 +140,10 @@ attributeMap :: AttrMap
 attributeMap = attrMap V.defAttr
     [ (titleAttr, fg V.yellow `V.withStyle` V.bold)
     , (bulletAttr, fg V.yellow `V.withStyle` V.bold)
+    , (errorAttr, fg V.red `V.withStyle` V.bold)
     ]
 
-titleAttr, bulletAttr :: AttrName
+titleAttr, bulletAttr, errorAttr :: AttrName
 titleAttr = "titleAttr"
 bulletAttr = "bulletAttr"
+errorAttr = "errorAttr"
