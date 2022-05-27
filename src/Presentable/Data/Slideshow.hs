@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 -- |
 -- Module
 -- Copyright
@@ -12,24 +14,24 @@ import Data.Text ( Text, unpack )
 
 type Title = Text
 
-data Slideshow =
-    Slideshow { slideshowCopyright :: Maybe Copyright
-              , slideshowSlides :: NonEmpty Slide
-              } deriving ( Show, Eq )
+data Slideshow = Slideshow
+    { slideshowCopyright :: Maybe Copyright
+    , slideshowSlides :: NonEmpty Slide
+    } deriving (Eq, Show )
 
 data Slide = TitleSlide Title (Maybe Text)
            | SingleContentSlide Title SlideContent
            | ErrorSlide Text
-               deriving ( Show, Eq )
+    deriving (Eq, Show)
 
-data SlideContent = BulletList [Text]
+data SlideContent = BulletList [TextBlock]
                   | NoContent
-                      deriving (Show, Eq)
+    deriving (Eq, Show)
 
-data Copyright =
-    Copyright { copyrightAuthor :: Text
-              , copyrightYear :: Maybe CopyrightYear
-              } deriving ( Eq )
+data Copyright = Copyright
+    { copyrightAuthor :: Text
+    , copyrightYear :: Maybe CopyrightYear
+    } deriving Eq
 
 instance Show Copyright where
     show (Copyright author year) = "© " ++ case year of
@@ -41,4 +43,12 @@ instance Show Copyright where
 
 data CopyrightYear = SingleYear Int
                    | YearRange Int Int
-                        deriving ( Show, Eq )
+                        deriving (Eq, Show)
+
+newtype TextBlock = TextBlock
+    { unTextBlock :: NonEmpty InlineText
+    } deriving (Eq, Show)
+
+data InlineText = PlainText Text
+    deriving (Eq, Show)
+

@@ -44,9 +44,11 @@ import Text.Megaparsec.Char ( char, digitChar, eol, hspace, space, string )
 
 import Presentable.Data.Slideshow ( Copyright ( Copyright )
                                   , CopyrightYear ( SingleYear, YearRange )
+                                  , InlineText ( PlainText )
                                   , Slideshow ( Slideshow )
                                   , Slide ( SingleContentSlide, TitleSlide )
                                   , SlideContent ( BulletList, NoContent )
+                                  , TextBlock ( TextBlock )
                                   )
 
 type Parser = Parsec Void Text
@@ -120,8 +122,8 @@ slideContentParser = try bulletListParser <|> noContentParser
 bulletListParser :: Parser SlideContent
 bulletListParser = emptyLine >> BulletList <$> some bulletListItemParser
 
-bulletListItemParser :: Parser Text
-bulletListItemParser = between (string "- ") (optional eol) (continuedLine 2)
+bulletListItemParser :: Parser TextBlock
+bulletListItemParser = plainTextBlock <$> between (string "- ") (optional eol) (continuedLine 2)
 
 noContentParser :: Parser SlideContent
 noContentParser = lookAhead (space >> try eof <|> void (char '#'))
@@ -155,3 +157,5 @@ continuedLine indentationLevel = do
     continuationMatch =
         string $ T.append "\n" (T.replicate indentationLevel " ")
 
+plainTextBlock :: Text -> TextBlock
+plainTextBlock = TextBlock . (:| []) . PlainText . T.unwords . T.words

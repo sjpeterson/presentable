@@ -12,6 +12,7 @@ module Presentable.UI.Brick
     ) where
 
 import Control.Monad.Reader ( asks, liftIO )
+import qualified Data.List.NonEmpty as NE
 import Data.Text ( Text )
 
 import Brick 
@@ -61,7 +62,8 @@ import Presentable.App.State ( AppState
                              )
 import Presentable.Data.Buffer ( bufferCurrent, bufferOf, next, prev )
 import Presentable.Data.Geometry ( Rect ( Rect ) )
-import Presentable.Data.Slideshow ( Slide ( ErrorSlide
+import Presentable.Data.Slideshow ( InlineText ( PlainText )
+                                  , Slide ( ErrorSlide
                                           , TitleSlide
                                           , SingleContentSlide
                                           )
@@ -69,6 +71,7 @@ import Presentable.Data.Slideshow ( Slide ( ErrorSlide
                                   , Slideshow ( slideshowCopyright
                                               , slideshowSlides
                                               )
+                                  , TextBlock ( TextBlock )
                                   )
 import Presentable.Process.Slideshow ( fitTo )
 
@@ -114,8 +117,13 @@ drawContent NoContent          = emptyWidget
 drawContent (BulletList items) = padRight Max $
     vBox $ map drawBulletListItem items
 
-drawBulletListItem :: Text -> Widget Name
-drawBulletListItem = (<+>) (withAttr bulletAttr (txt "• ")) . txtWrap
+drawBulletListItem :: TextBlock -> Widget Name
+drawBulletListItem (TextBlock tb) =
+    (<+>) (withAttr bulletAttr (txt "• ")) (txtWrap s)
+  where
+    s = case NE.head tb of
+        (PlainText s') -> s'
+
 
 handleEvent :: AppEnv
             -> AppState

@@ -8,12 +8,15 @@
 --
 -- Slideshow processing functions
 
-module Presentable.Process.Slideshow ( fitTo ) where
+module Presentable.Process.Slideshow ( fitTo, wrapTo ) where
 
+import Data.Bifunctor ( first, second )
 import Data.Foldable ( foldr' )
 import Data.List.NonEmpty ( NonEmpty ( (:|) ) )
 import qualified Data.List.NonEmpty as NE ( init, last )
 import Data.Maybe ( fromMaybe )
+import Data.Text ( Text )
+import qualified Data.Text as T
 
 import Presentable.Data.Buffer ( Buffer )
 import Presentable.Data.Geometry ( Rect ( Rect, rectRows ) )
@@ -22,8 +25,11 @@ import Presentable.Data.Slideshow ( Slide ( ErrorSlide
                                           , TitleSlide
                                           )
                                   , Slideshow
+                                  , TextBlock ( TextBlock )
+                                  , InlineText ( PlainText )
                                   )
 
+-- | Fit a non-empty list of slides to the given dimensions.
 fitTo :: Rect -> NonEmpty Slide -> NonEmpty Slide
 fitTo rect slides =
     fromMaybe sizeErrorSlide $ foldr' f lastSlides (NE.init slides)
@@ -48,3 +54,25 @@ heightAtWidth columns slide = case slide of
 
 sizeErrorSlide :: NonEmpty Slide
 sizeErrorSlide = (ErrorSlide "The window is too small for this slideshow") :| []
+
+-- | Wrap a text block to the given number of columns.
+wrapTo :: Int -> TextBlock -> Either WrappingError [[InlineText]]
+wrapTo columns (TextBlock segments) = undefined
+
+type WrappingError = Text
+
+-- | Wrap plain text at the given column
+wrapTextAt :: Int -> Text -> Either WrappingError [Text]
+wrapTextAt columns s
+    | T.length firstWord > columns = tooLongError
+    | strippedLine == ""           = Right []
+    | otherwise                    = (strippedLine:) <$> (wrapTextAt columns joined)
+  where
+    ((line, spill), remaining) =
+        first (T.breakOnEnd " ") $ T.splitAt (columns + 1) s
+    strippedLine = T.strip line
+    joined = T.append spill remaining
+    firstWord = case T.words line of
+        []    -> ""
+        (w:_) -> w
+    tooLongError = Left $ T.concat ["Word '", firstWord, "' is too long to fit"]
