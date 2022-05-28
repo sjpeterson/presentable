@@ -36,6 +36,8 @@ library
       Presentable.Parse.Slideshow
       Presentable.Process.Slideshow
       Presentable.UI.Brick
+      Presentable.UI.Brick.Attributes
+      Presentable.UI.Brick.Draw
   other-modules:
       Paths_presentable
   hs-source-dirs:
@@ -56,7 +58,7 @@ executable presentable
       Paths_presentable
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -W
   build-depends:
       base >=4.7 && <5
     , optparse-applicative

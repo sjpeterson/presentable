@@ -19,7 +19,6 @@ data Slideshow = Slideshow
 -- | Slide data type.
 data Slide = TitleSlide Title (Maybe Text)
            | SingleContentSlide Title SlideContent
-           | ErrorSlide Text
     deriving (Eq, Show)
 
 -- | Slide content data type.

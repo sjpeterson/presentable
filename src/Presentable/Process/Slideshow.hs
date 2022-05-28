@@ -1,7 +1,8 @@
+{-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
-module Presentable.Process.Slideshow ( fitTo, wrapAt ) where
+module Presentable.Process.Slideshow ( fitTo, wrapAt, wrapRelaxedAt ) where
 
 import Data.Bifunctor ( first, second )
 import Data.Foldable ( foldr' )
@@ -14,8 +15,7 @@ import qualified Data.Text as T
 import Presentable.Data.Buffer ( Buffer )
 import Presentable.Data.Geometry ( Rect ( Rect, rectRows ) )
 import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
-                                  , Slide ( ErrorSlide
-                                          , SingleContentSlide
+                                  , Slide ( SingleContentSlide
                                           , TitleSlide
                                           )
                                   , Slideshow
@@ -26,35 +26,27 @@ import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
 type WrappingError = Text
 
 -- | Fit a non-empty list of slides to the given dimensions.
-fitTo :: Rect -> NonEmpty Slide -> NonEmpty Slide
-fitTo rect slides =
-    fromMaybe sizeErrorSlide $ foldr' f lastSlides (NE.init slides)
+fitTo :: Rect -> NonEmpty Slide -> Either WrappingError (NonEmpty Slide)
+fitTo rect slides = foldr' f lastSlides (NE.init slides)
   where
-    f _     Nothing       = Nothing
-    f slide (Just slides) = case (fitOneTo rect slide) of
-        Nothing      -> Nothing
-        Just slides' -> Just $ slides' <> slides
+    f :: Slide -> Either WrappingError (NonEmpty Slide) -> Either WrappingError (NonEmpty Slide)
+    f slide slides = (flip (<>) slides) (fitOneTo rect slide)
     lastSlides = fitOneTo rect $ NE.last slides
 
 -- | Fit a single slide to the given dimensions.
-fitOneTo :: Rect -> Slide -> Maybe (NonEmpty Slide)
+fitOneTo :: Rect -> Slide -> Either WrappingError (NonEmpty Slide)
 fitOneTo Rect {..} slide = case slide of
-    TitleSlide         title subtitle -> Just $ slide :| []
-    SingleContentSlide title content  -> Just $ slide :| []
-    ErrorSlide         _              -> Just $ slide :| []
+    TitleSlide         title subtitle -> Right [slide]
+    SingleContentSlide title content  -> Right [slide]
 
 -- | Compute the height of a slide at the given width.
 heightAtWidth :: Int -> Slide -> Int
 heightAtWidth columns slide = case slide of
     (TitleSlide         _ _) -> 0
     (SingleContentSlide _ _) -> undefined
-    (ErrorSlide         _  ) -> undefined
 
--- | A slide to show when some slide cannot be made to fit the window.
-sizeErrorSlide :: NonEmpty Slide
-sizeErrorSlide = (ErrorSlide "The window is too small for this slideshow") :| []
-
--- | Wrap a text block to the given number of columns.
+-- | Wrap a text block to the given number of columns. Results in an error if
+-- some word is longer than the allowed width.
 wrapAt :: Int -> TextBlock -> Either WrappingError [NonEmpty TaggedText]
 wrapAt c = fmap (map unparticles) . wrapParticlesAt c . particles . unTextBlock
 
@@ -74,6 +66,28 @@ wrapParticlesAt c (p :| ps) = reverse . map (NE.reverse . fst) <$>
             current@(particles, n):ps' ->
               let newLength = n + 1 + pLength
               in if newLength > c
+                then newRow:current:ps'
+                else (t<|particles, newLength):ps'
+      where
+        newRow = (t:|[], pLength)
+        pLength = T.length $ fst t
+
+-- | Wrap a text block to the given number of columns.
+wrapRelaxedAt :: Int -> TextBlock -> [NonEmpty TaggedText]
+wrapRelaxedAt c =
+    map unparticles . wrapParticlesRelaxedAt c . particles . unTextBlock
+
+-- | Wrap particles of a text block to the given number of columns.
+wrapParticlesRelaxedAt :: Int -> NonEmpty TaggedText -> [NonEmpty TaggedText]
+wrapParticlesRelaxedAt c (p :| ps) = reverse . map (NE.reverse . fst) $
+    foldr' f initial (reverse ps)
+  where
+    initial = [(p :| [], T.length $ fst p)]
+    f t acc = case acc of
+        []                         -> [newRow]
+        current@(particles, n):ps' ->
+            let newLength = n + 1 + pLength
+            in if newLength > c
                 then newRow:current:ps'
                 else (t<|particles, newLength):ps'
       where
