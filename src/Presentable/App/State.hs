@@ -1,13 +1,6 @@
 {-# LANGUAGE NamedFieldPuns  #-}
 {-# LANGUAGE RecordWildCards #-}
 
--- |
--- Module     : Presentable.App.State
--- Copyright  : 2022 Stefan Peterson
--- License    : MIT
---
--- Application state for Presentable
-
 module Presentable.App.State where
 
 import Lens.Micro ( Lens', lens, over )
@@ -19,15 +12,18 @@ import Presentable.Data.Slideshow
     , Slide
     )
 
+-- | Application state type.
 data AppState = AppState
     { _appStateSlidesBuffer :: Buffer Slide
     } deriving ( Eq, Show )
 
+-- | A lens for the slides buffer.
 appStateSlidesBuffer :: Lens' AppState (Buffer Slide)
 appStateSlidesBuffer = lens
     _appStateSlidesBuffer
     (\appState b -> appState { _appStateSlidesBuffer = b })
 
+-- | Create the initial state from the environment.
 initState :: AppEnv -> AppState
 initState AppEnv {..} = AppState {..}
   where

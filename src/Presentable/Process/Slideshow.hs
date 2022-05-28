@@ -1,13 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
--- |
--- Module     : Presentable.Process.Slideshow
--- Copyright  : Stefan Peterson
--- License    : MIT
---
--- Slideshow processing functions
-
 module Presentable.Process.Slideshow ( fitTo, wrapAt ) where
 
 import Data.Bifunctor ( first, second )
@@ -43,18 +36,21 @@ fitTo rect slides =
         Just slides' -> Just $ slides' <> slides
     lastSlides = fitOneTo rect $ NE.last slides
 
+-- | Fit a single slide to the given dimensions.
 fitOneTo :: Rect -> Slide -> Maybe (NonEmpty Slide)
 fitOneTo Rect {..} slide = case slide of
     TitleSlide         title subtitle -> Just $ slide :| []
     SingleContentSlide title content  -> Just $ slide :| []
     ErrorSlide         _              -> Just $ slide :| []
 
+-- | Compute the height of a slide at the given width.
 heightAtWidth :: Int -> Slide -> Int
 heightAtWidth columns slide = case slide of
     (TitleSlide         _ _) -> 0
     (SingleContentSlide _ _) -> undefined
     (ErrorSlide         _  ) -> undefined
 
+-- | A slide to show when some slide cannot be made to fit the window.
 sizeErrorSlide :: NonEmpty Slide
 sizeErrorSlide = (ErrorSlide "The window is too small for this slideshow") :| []
 
@@ -62,6 +58,7 @@ sizeErrorSlide = (ErrorSlide "The window is too small for this slideshow") :| []
 wrapAt :: Int -> TextBlock -> Either WrappingError [NonEmpty TaggedText]
 wrapAt c = fmap (map unparticles) . wrapParticlesAt c . particles . unTextBlock
 
+-- | Wrap particles of a text block to the given number of columns.
 wrapParticlesAt :: Int
                 -> NonEmpty TaggedText
                 -> Either WrappingError [NonEmpty TaggedText]
@@ -83,6 +80,7 @@ wrapParticlesAt c (p :| ps) = reverse . map (NE.reverse . fst) <$>
         newRow = (t:|[], pLength)
         pLength = T.length $ fst t
 
+-- | Split a non-empty list of tagged inline text parts into particles.
 particles :: NonEmpty TaggedText -> NonEmpty TaggedText
 particles ((s, PlainText) :| ts) = case ts of
     (x:xs) -> headParticles <> particles (x:|xs)
@@ -92,6 +90,7 @@ particles ((s, PlainText) :| ts) = case ts of
         (w:ws) -> w :| ws
         _      -> (s, PlainText) :| []
 
+-- | Join particles where allowed by their tags.
 unparticles :: NonEmpty TaggedText -> NonEmpty TaggedText
 unparticles ps@(p :| []) = ps
 unparticles ((s1, PlainText) :| ((s2, PlainText):ps)) =

@@ -1,13 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
--- |
--- Module
--- Copyright
--- License
---
--- Presentation parser for Presentable
-
 module Presentable.Parse.Slideshow
     ( parseSlideshow
     , parseSlide
@@ -56,15 +49,19 @@ type Parser = Parsec Void Text
 
 type ParsingError = Text
 
+-- | Parse text as a slideshow.
 parseSlideshow :: FilePath -> Text -> Either ParsingError Slideshow
 parseSlideshow filePath = first handleError . runParser slideshowParser filePath
 
+-- | Parse text as a single slide.
 parseSlide :: FilePath -> Text -> Either ParsingError Slide
 parseSlide filePath = first handleError . runParser slideParser filePath
 
+-- | Convert Megaparsec error to own ParsingError
 handleError :: ParseErrorBundle Text Void -> ParsingError
 handleError = T.pack . errorBundlePretty
 
+-- | Parser for a complete slideshow.
 slideshowParser :: Parser Slideshow
 slideshowParser = do
     copyright <- optional copyrightParser
@@ -74,15 +71,18 @@ slideshowParser = do
     slides <- many slideParser
     return $ Slideshow copyright (titleSlide :| slides)
 
+-- | Parser for a level 1 markdown heading.
 heading1Parser :: Parser Text
 heading1Parser = between (string "# ") (optional eol) nonTag
 
+-- | Parser for a line of text surrounded by whitespace.
 solitaryLineParser :: Parser Text
 solitaryLineParser = between
     emptyLine
     (choice [eof, (optional eol >> lookAhead emptyLine)])
     nonTag
 
+-- | Parser for a copyright tag.
 copyrightParser :: Parser Copyright
 copyrightParser = do
     _ <- char '@'
@@ -94,6 +94,7 @@ copyrightParser = do
     _ <- eol >> emptyLine
     return $ Copyright author copyrightYear
 
+-- | Parser for the year or year range of a copyright tag.
 copyrightYearParser :: Parser CopyrightYear
 copyrightYearParser = do
     from <- yearParser
@@ -102,31 +103,38 @@ copyrightYearParser = do
         Nothing  -> SingleYear from
         Just to' -> YearRange from to'
 
+-- | Parser for a single year.
 yearParser :: Parser Int
 yearParser = read <$> count 4 digitChar
 
+-- | Parser for a single slide.
 slideParser :: Parser Slide
 slideParser = do
     title <- heading2Parser
     content <- slideContentParser
     return $ SingleContentSlide title content
 
+-- | Parser for a level 2 markdown heading.
 heading2Parser :: Parser Text
 heading2Parser = between
     (emptyLine >> string "## ")
     (optional eol)
     nonTag
 
+-- | Parser for slide contents.
 slideContentParser :: Parser SlideContent
 slideContentParser = try bulletListParser <|> noContentParser
 
+-- | Parser for a bullet list.
 bulletListParser :: Parser SlideContent
 bulletListParser = emptyLine >> BulletList <$> some bulletListItemParser
 
+-- | Parser for an item in a bullet list.
 bulletListItemParser :: Parser TextBlock
 bulletListItemParser =
     plainTextBlock <$> between (string "- ") (optional eol) (continuedLine 2)
 
+-- | Parser for the content of an empty slide.
 noContentParser :: Parser SlideContent
 noContentParser = lookAhead (space >> try eof <|> void (char '#'))
                >> return NoContent
@@ -135,18 +143,23 @@ noContentParser = lookAhead (space >> try eof <|> void (char '#'))
 -- Helpers --
 -- ------- --
 
+-- | Parser for any text until EOL that is not a tag.
 nonTag :: Parser Text
 nonTag = lookAhead (noneOf ['#', '@', ' ']) >> restOfLine
 
+-- | Parser for an empty line.
 emptyLine :: Parser ()
 emptyLine = hspace >> choice [eof, void eol]
 
+-- | Modifies a parser by requiring a leading space.
 withLeadingSpace :: Parser a -> Parser a
 withLeadingSpace p = char ' ' >> p
 
+-- | Parser for Text until EOL.
 restOfLine :: Parser Text
 restOfLine = T.strip . T.pack <$> some (anySingleBut '\n')
 
+-- | Creates a parser for lines with continuation.
 continuedLine :: Int -> Parser Text
 continuedLine indentationLevel = do
     first <- T.strip . T.pack <$> some (anySingleBut '\n')

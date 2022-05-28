@@ -1,10 +1,3 @@
--- |
--- Module
--- Copyright
--- License
---
--- Main application module for Presentable
-
 module Presentable
     ( runApp
     ) where
@@ -19,6 +12,7 @@ import Presentable.Data.Slideshow ( Slideshow )
 import Presentable.Parse.Slideshow ( parseSlideshow )
 import Presentable.UI.Brick ( runBrick )
 
+-- | Run the app with the path to a slideshow.
 runApp :: FilePath -> IO ()
 runApp slideshowFile = do
     parsed <- parseSlideshow slideshowFile <$> TIO.readFile slideshowFile
@@ -30,8 +24,5 @@ runApp slideshowFile = do
                 Left err -> TIO.hPutStrLn stderr err
                 Right config -> bracket
                     (mkEnv config slideshow)
-                    runAppWithEnv
+                    runBrick
                     cleanupEnv
-
-runAppWithEnv :: AppEnv -> IO ()
-runAppWithEnv = runBrick
