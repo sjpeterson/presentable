@@ -9,8 +9,9 @@
 
 module Presentable.Data.Slideshow where
 
-import Data.List.NonEmpty ( NonEmpty )
+import Data.List.NonEmpty ( NonEmpty ( (:|) ) )
 import Data.Text ( Text, unpack )
+import qualified Data.Text as T
 
 type Title = Text
 
@@ -46,9 +47,13 @@ data CopyrightYear = SingleYear Int
                         deriving (Eq, Show)
 
 newtype TextBlock = TextBlock
-    { unTextBlock :: NonEmpty InlineText
+    { unTextBlock :: NonEmpty TaggedText
     } deriving (Eq, Show)
 
-data InlineText = PlainText Text
+type TaggedText = (Text, InlineTextTag)
+
+data InlineTextTag = PlainText
     deriving (Eq, Show)
 
+plainTextBlock :: Text -> TextBlock
+plainTextBlock = TextBlock . (:| []) . (flip (,) PlainText)

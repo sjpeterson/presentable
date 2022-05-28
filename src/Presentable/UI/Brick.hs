@@ -62,7 +62,7 @@ import Presentable.App.State ( AppState
                              )
 import Presentable.Data.Buffer ( bufferCurrent, bufferOf, next, prev )
 import Presentable.Data.Geometry ( Rect ( Rect ) )
-import Presentable.Data.Slideshow ( InlineText ( PlainText )
+import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
                                   , Slide ( ErrorSlide
                                           , TitleSlide
                                           , SingleContentSlide
@@ -71,6 +71,7 @@ import Presentable.Data.Slideshow ( InlineText ( PlainText )
                                   , Slideshow ( slideshowCopyright
                                               , slideshowSlides
                                               )
+                                  , TaggedText
                                   , TextBlock ( TextBlock )
                                   )
 import Presentable.Process.Slideshow ( fitTo )
@@ -122,8 +123,7 @@ drawBulletListItem (TextBlock tb) =
     (<+>) (withAttr bulletAttr (txt "• ")) (txtWrap s)
   where
     s = case NE.head tb of
-        (PlainText s') -> s'
-
+        (s', PlainText) -> s'
 
 handleEvent :: AppEnv
             -> AppState

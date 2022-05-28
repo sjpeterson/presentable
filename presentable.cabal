@@ -69,6 +69,7 @@ test-suite presentable-test
   other-modules:
       Presentable.Data.SlideshowSpec
       Presentable.Parse.SlideshowSpec
+      Presentable.Process.SlideshowSpec
       Paths_presentable
   hs-source-dirs:
       test

@@ -12,6 +12,7 @@ import Presentable.Data.Slideshow ( Copyright (..)
                                   , Slideshow (..)
                                   , Slide (..)
                                   , SlideContent (..)
+                                  , plainTextBlock
                                   )
 import Presentable.Parse.Slideshow ( parseSlideshow, parseSlide )
 
@@ -25,12 +26,16 @@ spec = do
             parseSlide "" "\n## Slide Title\n\n- First item\n- Second item"
                 `shouldBe` Right (SingleContentSlide
                     "Slide Title"
-                    (BulletList ["First item", "Second item"]))
+                    (BulletList [ plainTextBlock "First item"
+                                , plainTextBlock "Second item"
+                                ]))
         it "unwraps line continuation in bullet list slides" $ do
             parseSlide "" "\n## Slide Title\n\n- First item\n- Second\n  item"
                 `shouldBe` Right (SingleContentSlide
                     "Slide Title"
-                    (BulletList ["First item", "Second item"]))
+                    (BulletList [ plainTextBlock "First item"
+                                , plainTextBlock "Second item"
+                                ]))
     describe "parseSlideshow" $ do
         it "parses a title-only slideshow" $ do
             parseSlideshow' testSlideshowTitleOnly `shouldBe`
@@ -164,7 +169,11 @@ spec = do
         Slideshow
             Nothing
             [ TitleSlide "Slideshow Title" Nothing
-            , SingleContentSlide "Slide Title" (BulletList ["First item", "Second item"])
+            , SingleContentSlide
+                "Slide Title"
+                (BulletList [ plainTextBlock "First item"
+                            , plainTextBlock "Second item"
+                            ])
             ]
 
     testSlideshowTwoBulletListSlides =
@@ -175,10 +184,14 @@ spec = do
             [ TitleSlide "Slideshow Title" Nothing
             , SingleContentSlide
                   "Slide Title"
-                  (BulletList ["First item", "Second item"])
+                  (BulletList [ plainTextBlock "First item"
+                              , plainTextBlock "Second item"
+                              ])
             , SingleContentSlide
                   "Second Slide Title"
-                  (BulletList ["1st item", "2nd item"])
+                  (BulletList [ plainTextBlock "1st item"
+                              , plainTextBlock "2nd item"
+                              ])
             ]
 
     testSlideshowMixedSlides = T.unlines
@@ -204,7 +217,9 @@ spec = do
             , SingleContentSlide "Empty Slide" NoContent
             , SingleContentSlide
                   "List Slide"
-                  (BulletList ["First item", "Second item"])
+                  (BulletList [ plainTextBlock "First item"
+                              , plainTextBlock "Second item"
+                              ])
             , SingleContentSlide "Second Empty Slide" NoContent
             ]
 

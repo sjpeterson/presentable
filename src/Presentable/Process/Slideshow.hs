@@ -8,26 +8,29 @@
 --
 -- Slideshow processing functions
 
-module Presentable.Process.Slideshow ( fitTo, wrapTo ) where
+module Presentable.Process.Slideshow ( fitTo, wrapAt ) where
 
 import Data.Bifunctor ( first, second )
 import Data.Foldable ( foldr' )
-import Data.List.NonEmpty ( NonEmpty ( (:|) ) )
-import qualified Data.List.NonEmpty as NE ( init, last )
+import Data.List.NonEmpty ( NonEmpty ( (:|) ), (<|) )
+import qualified Data.List.NonEmpty as NE
 import Data.Maybe ( fromMaybe )
 import Data.Text ( Text )
 import qualified Data.Text as T
 
 import Presentable.Data.Buffer ( Buffer )
 import Presentable.Data.Geometry ( Rect ( Rect, rectRows ) )
-import Presentable.Data.Slideshow ( Slide ( ErrorSlide
+import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
+                                  , Slide ( ErrorSlide
                                           , SingleContentSlide
                                           , TitleSlide
                                           )
                                   , Slideshow
-                                  , TextBlock ( TextBlock )
-                                  , InlineText ( PlainText )
+                                  , TaggedText
+                                  , TextBlock ( TextBlock, unTextBlock )
                                   )
+
+type WrappingError = Text
 
 -- | Fit a non-empty list of slides to the given dimensions.
 fitTo :: Rect -> NonEmpty Slide -> NonEmpty Slide
@@ -56,23 +59,40 @@ sizeErrorSlide :: NonEmpty Slide
 sizeErrorSlide = (ErrorSlide "The window is too small for this slideshow") :| []
 
 -- | Wrap a text block to the given number of columns.
-wrapTo :: Int -> TextBlock -> Either WrappingError [[InlineText]]
-wrapTo columns (TextBlock segments) = undefined
+wrapAt :: Int -> TextBlock -> Either WrappingError [NonEmpty TaggedText]
+wrapAt c = fmap (map unparticles) . wrapParticlesAt c . particles . unTextBlock
 
-type WrappingError = Text
-
--- | Wrap plain text at the given column
-wrapTextAt :: Int -> Text -> Either WrappingError [Text]
-wrapTextAt columns s
-    | T.length firstWord > columns = tooLongError
-    | strippedLine == ""           = Right []
-    | otherwise                    = (strippedLine:) <$> (wrapTextAt columns joined)
+wrapParticlesAt :: Int
+                -> NonEmpty TaggedText
+                -> Either WrappingError [NonEmpty TaggedText]
+wrapParticlesAt c (p :| ps) = reverse . map (NE.reverse . fst) <$>
+    foldr' f initial (reverse ps)
   where
-    ((line, spill), remaining) =
-        first (T.breakOnEnd " ") $ T.splitAt (columns + 1) s
-    strippedLine = T.strip line
-    joined = T.append spill remaining
-    firstWord = case T.words line of
-        []    -> ""
-        (w:_) -> w
-    tooLongError = Left $ T.concat ["Word '", firstWord, "' is too long to fit"]
+    initial = Right [(p :| [], T.length $ fst p)]
+    f _ error@(Left _) = error
+    f t (Right acc)    = if pLength > c
+        then Left $ T.concat ["Particle '", fst t, "' is too long to fit"]
+        else Right $ case acc of
+            []                         -> [newRow]
+            current@(particles, n):ps' ->
+              let newLength = n + 1 + pLength
+              in if newLength > c
+                then newRow:current:ps'
+                else (t<|particles, newLength):ps'
+      where
+        newRow = (t:|[], pLength)
+        pLength = T.length $ fst t
+
+particles :: NonEmpty TaggedText -> NonEmpty TaggedText
+particles ((s, PlainText) :| ts) = case ts of
+    (x:xs) -> headParticles <> particles (x:|xs)
+    _      -> headParticles
+  where
+    headParticles = case map (flip (,) PlainText) (T.words s) of
+        (w:ws) -> w :| ws
+        _      -> (s, PlainText) :| []
+
+unparticles :: NonEmpty TaggedText -> NonEmpty TaggedText
+unparticles ps@(p :| []) = ps
+unparticles ((s1, PlainText) :| ((s2, PlainText):ps)) =
+    unparticles $ (T.unwords [s1, s2], PlainText) :| ps
