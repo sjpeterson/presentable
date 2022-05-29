@@ -12,6 +12,9 @@ module Presentable.UI.Brick
     ( runBrick
     ) where
 
+import Control.Monad.IO.Class ( liftIO )
+import Data.Text ( Text )
+
 import Brick
     ( App ( App
           , appDraw
@@ -28,6 +31,7 @@ import Brick
     , continue
     , defaultMain
     , fg
+    , getVtyHandle
     , halt
     , neverShowCursor
     )
@@ -40,9 +44,9 @@ import Presentable.App.State ( AppState
                              , appStateSlidesBuffer
                              , initState
                              )
-import Presentable.Data.Buffer ( bufferOf, next, prev )
+import Presentable.Data.Buffer ( Buffer, bufferOf, next, prev )
 import Presentable.Data.Geometry ( Rect ( Rect, rectColumns ) )
-import Presentable.Data.Slideshow ( Slideshow ( slideshowSlides ) )
+import Presentable.Data.Slideshow ( Slide, Slideshow ( slideshowSlides ) )
 import Presentable.Process.Slideshow ( fitTo )
 import Presentable.UI.Brick.Draw ( Name, drawUI )
 import Presentable.UI.Brick.Attributes ( bulletAttr, errorAttr, titleAttr )
@@ -51,9 +55,17 @@ app :: AppEnv -> App AppState e Name
 app appEnv = App { appDraw = drawUI appEnv
                  , appChooseCursor = neverShowCursor
                  , appHandleEvent = handleEvent appEnv
-                 , appStartEvent = return
+                 , appStartEvent = appStart appEnv
                  , appAttrMap = const attributeMap
                  }
+
+appStart :: AppEnv -> AppState -> EventM Name AppState
+appStart appEnv appState = do
+    vtyOutput <- V.outputIface <$> getVtyHandle
+    (columns, rows) <- liftIO (V.displayBounds vtyOutput)
+    let rect = Rect columns rows
+    return $ appState & appStateColumns .~ columns
+                      & appStateSlidesBuffer .~ (makeBuffer appEnv rect)
 
 runBrick :: AppEnv -> IO ()
 runBrick appEnv = defaultMain (app appEnv) (initState appEnv) >> return ()
@@ -74,7 +86,7 @@ handleEvent appEnv appState event = case event of
     prevSlide = over appStateSlidesBuffer (fmap prev) appState
     fitSlides rect@(Rect {..}) =
         appState & appStateColumns .~ rectColumns
-                 & appStateSlidesBuffer .~ ((fmap bufferOf) $ fitTo rect $ slideshowSlides $ slideshow appEnv)
+                 & appStateSlidesBuffer .~ (makeBuffer appEnv rect)
 
 attributeMap :: AttrMap
 attributeMap = attrMap V.defAttr
@@ -82,3 +94,8 @@ attributeMap = attrMap V.defAttr
     , (bulletAttr, fg V.yellow `V.withStyle` V.bold)
     , (errorAttr, fg V.red `V.withStyle` V.bold)
     ]
+
+-- | Make a buffer of slides fitting the given rectangle.
+makeBuffer :: AppEnv -> Rect -> Either Text (Buffer Slide)
+makeBuffer appEnv rect =
+    (fmap bufferOf) $ fitTo rect $ slideshowSlides $ slideshow appEnv

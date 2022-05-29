@@ -1,5 +1,6 @@
-{-# LANGUAGE NamedFieldPuns  #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE NamedFieldPuns    #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 module Presentable.App.State where
 
@@ -8,8 +9,8 @@ import Data.Text ( Text )
 import Lens.Micro ( Lens', lens )
 
 import Presentable.App.Env ( AppEnv ( AppEnv, slideshow ) )
-import Presentable.Data.Buffer ( Buffer, bufferOf )
-import Presentable.Data.Slideshow ( Slide, Slideshow ( slideshowSlides ) )
+import Presentable.Data.Buffer ( Buffer )
+import Presentable.Data.Slideshow ( Slide )
 
 -- | Application state type.
 data AppState = AppState
@@ -33,5 +34,5 @@ appStateColumns = lens
 initState :: AppEnv -> AppState
 initState AppEnv {..} = AppState {..}
   where
-    _appStateSlidesBuffer = Right $ bufferOf $ slideshowSlides slideshow
-    _appStateColumns = 80
+    _appStateSlidesBuffer = Left "Not initialized"
+    _appStateColumns = 0

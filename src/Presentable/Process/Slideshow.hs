@@ -23,11 +23,11 @@ type WrappingError = Text
 
 -- | Fit a non-empty list of slides to the given dimensions.
 fitTo :: Rect -> NonEmpty Slide -> Either WrappingError (NonEmpty Slide)
-fitTo rect slides = foldr' f lastSlides (NE.init slides)
-  where
-    f :: Slide -> Either WrappingError (NonEmpty Slide) -> Either WrappingError (NonEmpty Slide)
-    f slide slides = (flip (<>) slides) (fitOneTo rect slide)
-    lastSlides = fitOneTo rect $ NE.last slides
+fitTo _ slides = Right slides
+-- fitTo rect slides = foldr' f lastSlides (NE.init slides)
+--   where
+--     f slide slides = (flip (<>) slides) (fitOneTo rect slide)
+--     lastSlides = fitOneTo rect $ NE.last slides
 
 -- | Fit a single slide to the given dimensions.
 fitOneTo :: Rect -> Slide -> Either WrappingError (NonEmpty Slide)
