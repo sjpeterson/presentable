@@ -5,14 +5,11 @@ module Presentable.App.State where
 
 import Data.Text ( Text )
 
-import Lens.Micro ( Lens', lens, over )
+import Lens.Micro ( Lens', lens )
 
 import Presentable.App.Env ( AppEnv ( AppEnv, slideshow ) )
-import Presentable.Data.Buffer ( Buffer ( Buffer ), bufferOf, next, prev )
-import Presentable.Data.Slideshow
-    ( Slideshow ( Slideshow, slideshowSlides )
-    , Slide
-    )
+import Presentable.Data.Buffer ( Buffer, bufferOf )
+import Presentable.Data.Slideshow ( Slide, Slideshow ( slideshowSlides ) )
 
 -- | Application state type.
 data AppState = AppState

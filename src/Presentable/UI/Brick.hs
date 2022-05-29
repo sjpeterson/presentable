@@ -12,11 +12,6 @@ module Presentable.UI.Brick
     ( runBrick
     ) where
 
-import Control.Monad.Reader ( asks, liftIO )
-import Data.List.NonEmpty ( NonEmpty ( (:|) ) )
-import qualified Data.List.NonEmpty as NE
-import Data.Text ( Text )
-
 import Brick
     ( App ( App
           , appDraw
@@ -26,36 +21,18 @@ import Brick
           , appAttrMap
           )
     , AttrMap
-    , AttrName
     , BrickEvent ( VtyEvent )
     , EventM
     , Next
-    , Padding ( Max, Pad )
-    , Widget
-    , (<+>)
     , attrMap
-    , attrName
     , continue
     , defaultMain
-    , emptyWidget
     , fg
     , halt
-    , hLimit
     , neverShowCursor
-    , padAll
-    , padBottom
-    , padLeft
-    , padRight
-    , str
-    , txt
-    , txtWrap
-    , vBox
-    , vLimit
-    , withAttr
     )
-import Brick.Widgets.Center as C
 import qualified Graphics.Vty as V
-import Lens.Micro ( (&), (.~), (^.), over, set )
+import Lens.Micro ( (&), (.~), over )
 
 import Presentable.App.Env ( AppEnv ( slideshow ) )
 import Presentable.App.State ( AppState
@@ -63,20 +40,10 @@ import Presentable.App.State ( AppState
                              , appStateSlidesBuffer
                              , initState
                              )
-import Presentable.Data.Buffer ( bufferCurrent, bufferOf, next, prev )
+import Presentable.Data.Buffer ( bufferOf, next, prev )
 import Presentable.Data.Geometry ( Rect ( Rect, rectColumns ) )
-import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
-                                  , Slide ( SingleContentSlide
-                                          , TitleSlide
-                                          )
-                                  , SlideContent ( BulletList, NoContent )
-                                  , Slideshow ( slideshowCopyright
-                                              , slideshowSlides
-                                              )
-                                  , TaggedText
-                                  , TextBlock ( TextBlock )
-                                  )
-import Presentable.Process.Slideshow ( fitTo, wrapRelaxedAt )
+import Presentable.Data.Slideshow ( Slideshow ( slideshowSlides ) )
+import Presentable.Process.Slideshow ( fitTo )
 import Presentable.UI.Brick.Draw ( Name, drawUI )
 import Presentable.UI.Brick.Attributes ( bulletAttr, errorAttr, titleAttr )
 

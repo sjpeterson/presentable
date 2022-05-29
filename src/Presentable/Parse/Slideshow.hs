@@ -14,13 +14,10 @@ import Data.Text ( Text )
 import qualified Data.Text as T
 import Data.Void ( Void )
 import Text.Megaparsec ( Parsec
-                       , ParseErrorBundle ( ParseErrorBundle )
-                       , Token
-                       , Tokens
+                       , ParseErrorBundle
                        , (<|>)
                        , anySingleBut
                        , between
-                       , bundleErrors
                        , choice
                        , count
                        , eof
@@ -37,11 +34,10 @@ import Text.Megaparsec.Char ( char, digitChar, eol, hspace, space, string )
 
 import Presentable.Data.Slideshow ( Copyright ( Copyright )
                                   , CopyrightYear ( SingleYear, YearRange )
-                                  , InlineTextTag ( PlainText )
                                   , Slideshow ( Slideshow )
                                   , Slide ( SingleContentSlide, TitleSlide )
                                   , SlideContent ( BulletList, NoContent )
-                                  , TextBlock ( TextBlock )
+                                  , TextBlock
                                   , plainTextBlock
                                   )
 
@@ -150,10 +146,6 @@ nonTag = lookAhead (noneOf ['#', '@', ' ']) >> restOfLine
 -- | Parser for an empty line.
 emptyLine :: Parser ()
 emptyLine = hspace >> choice [eof, void eol]
-
--- | Modifies a parser by requiring a leading space.
-withLeadingSpace :: Parser a -> Parser a
-withLeadingSpace p = char ' ' >> p
 
 -- | Parser for Text until EOL.
 restOfLine :: Parser Text

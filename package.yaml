@@ -31,6 +31,8 @@ library:
   - mtl
   - text
   - vty
+  ghc-options:
+    - -W
 
 executables:
   presentable:

@@ -6,9 +6,8 @@ import Control.Exception ( bracket )
 import qualified Data.Text.IO as TIO
 import System.IO ( stderr )
 
-import Presentable.App.Env ( AppEnv, cleanupEnv, mkEnv )
+import Presentable.App.Env ( cleanupEnv, mkEnv )
 import Presentable.Config ( getConfig )
-import Presentable.Data.Slideshow ( Slideshow )
 import Presentable.Parse.Slideshow ( parseSlideshow )
 import Presentable.UI.Brick ( runBrick )
 

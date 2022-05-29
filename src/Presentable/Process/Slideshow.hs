@@ -4,23 +4,19 @@
 
 module Presentable.Process.Slideshow ( fitTo, wrapAt, wrapRelaxedAt ) where
 
-import Data.Bifunctor ( first, second )
 import Data.Foldable ( foldr' )
 import Data.List.NonEmpty ( NonEmpty ( (:|) ), (<|) )
 import qualified Data.List.NonEmpty as NE
-import Data.Maybe ( fromMaybe )
 import Data.Text ( Text )
 import qualified Data.Text as T
 
-import Presentable.Data.Buffer ( Buffer )
 import Presentable.Data.Geometry ( Rect ( Rect, rectRows ) )
 import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
                                   , Slide ( SingleContentSlide
                                           , TitleSlide
                                           )
-                                  , Slideshow
                                   , TaggedText
-                                  , TextBlock ( TextBlock, unTextBlock )
+                                  , TextBlock ( unTextBlock )
                                   )
 
 type WrappingError = Text
@@ -106,6 +102,6 @@ particles ((s, PlainText) :| ts) = case ts of
 
 -- | Join particles where allowed by their tags.
 unparticles :: NonEmpty TaggedText -> NonEmpty TaggedText
-unparticles ps@(p :| []) = ps
+unparticles ps@(_ :| []) = ps
 unparticles ((s1, PlainText) :| ((s2, PlainText):ps)) =
     unparticles $ (T.unwords [s1, s2], PlainText) :| ps

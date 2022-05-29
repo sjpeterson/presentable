@@ -42,6 +42,7 @@ library
       Paths_presentable
   hs-source-dirs:
       src
+  ghc-options: -W
   build-depends:
       base >=4.7 && <5
     , brick

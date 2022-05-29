@@ -6,43 +6,23 @@ import Data.List.NonEmpty ( NonEmpty )
 import qualified Data.List.NonEmpty as NE
 import Data.Text ( Text )
 import Brick
-    ( App ( App
-          , appDraw
-          , appChooseCursor
-          , appHandleEvent
-          , appStartEvent
-          , appAttrMap
-          )
-    , AttrMap
-    , AttrName
-    , BrickEvent ( VtyEvent )
-    , EventM
-    , Next
-    , Padding ( Max, Pad )
+    ( Padding ( Max, Pad )
     , Widget
     , (<+>)
-    , attrMap
-    , attrName
-    , continue
-    , defaultMain
     , emptyWidget
-    , fg
-    , halt
     , hLimit
-    , neverShowCursor
     , padAll
     , padBottom
     , padLeft
     , padRight
     , str
     , txt
-    , txtWrap
     , vBox
     , vLimit
     , withAttr
     )
 import Brick.Widgets.Center as C
-import Lens.Micro ( (&), (.~), (^.), over, set )
+import Lens.Micro ( (^.) )
 
 import Presentable.App.Env ( AppEnv ( slideshow ) )
 import Presentable.App.State ( AppState
@@ -53,9 +33,7 @@ import Presentable.Data.Buffer ( bufferCurrent )
 import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
                                   , Slide ( SingleContentSlide , TitleSlide )
                                   , SlideContent ( BulletList, NoContent )
-                                  , Slideshow ( slideshowCopyright
-                                              , slideshowSlides
-                                              )
+                                  , Slideshow ( slideshowCopyright )
                                   , TaggedText
                                   , TextBlock
                                   )

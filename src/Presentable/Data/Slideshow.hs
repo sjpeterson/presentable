@@ -4,7 +4,6 @@ module Presentable.Data.Slideshow where
 
 import Data.List.NonEmpty ( NonEmpty ( (:|) ) )
 import Data.Text ( Text, unpack )
-import qualified Data.Text as T
 
 -- | A type alias for the slideshow title
 type Title = Text
