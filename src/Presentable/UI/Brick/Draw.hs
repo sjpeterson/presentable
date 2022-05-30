@@ -42,7 +42,7 @@ import Presentable.UI.Brick.Attributes ( bulletAttr, errorAttr, titleAttr )
 
 type Name = ()
 
--- | Draw the application state
+-- | Draw the application state.
 drawUI :: AppEnv -> AppState -> [Widget Name]
 drawUI appEnv appState =
     [ C.center $ hLimit 80 $ vLimit 24 $ (padAll 1) inner ]
@@ -57,11 +57,11 @@ drawUI appEnv appState =
         Nothing        -> emptyWidget
         Just copyright -> padLeft Max $ str $ show copyright
 
--- | Draw an error
+-- | Draw an error.
 drawError :: Text -> Widget Name
 drawError = C.hCenter . withAttr errorAttr . txt
 
--- | Draw a slide
+-- | Draw a slide to the given width.
 drawSlide :: Int -> Slide -> Widget Name
 drawSlide _ (TitleSlide title subtitle) = case subtitle of
     Nothing -> titleWidget
@@ -75,13 +75,13 @@ drawSlide columns (SingleContentSlide title content) = padBottom Max $
          , drawContent columns content
          ]
 
--- | Draw slide contents
+-- | Draw slide contents to the given width.
 drawContent :: Int -> SlideContent -> Widget Name
 drawContent _       NoContent          = emptyWidget
 drawContent columns (BulletList items) = padRight Max $
     vBox $ map (drawBulletListItem columns) items
 
--- | Draw a bullet list item
+-- | Draw a bullet list item to the given width.
 drawBulletListItem :: Int -> TextBlock -> Widget Name
 drawBulletListItem columns tb =
     withAttr bulletAttr (txt "• ") <+> drawTextBlock (columns - 2) tb

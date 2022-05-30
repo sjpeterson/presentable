@@ -63,8 +63,8 @@ appStart :: AppEnv -> AppState -> EventM Name AppState
 appStart appEnv appState = do
     vtyOutput <- V.outputIface <$> getVtyHandle
     (columns, rows) <- liftIO (V.displayBounds vtyOutput)
-    let rect = Rect columns rows
-    return $ appState & appStateColumns .~ columns
+    let rect = Rect (columns - 2) (rows - 2)
+    return $ appState & appStateColumns .~ rectColumns rect
                       & appStateSlidesBuffer .~ (makeBuffer appEnv rect)
 
 runBrick :: AppEnv -> IO ()
@@ -79,7 +79,7 @@ handleEvent appEnv appState event = case event of
     (VtyEvent (V.EvKey V.KRight []))     -> continue nextSlide
     (VtyEvent (V.EvKey V.KLeft  []))     -> continue prevSlide
     (VtyEvent (V.EvResize columns rows)) -> continue $
-        fitSlides (Rect columns rows)
+        fitSlides (Rect (columns - 2) (rows - 2))
     _                                    -> continue appState
   where
     nextSlide = over appStateSlidesBuffer (fmap next) appState
