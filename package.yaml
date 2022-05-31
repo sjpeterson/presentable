@@ -29,6 +29,7 @@ library:
   - megaparsec
   - microlens
   - mtl
+  - parser-combinators
   - text
   - vty
   ghc-options:

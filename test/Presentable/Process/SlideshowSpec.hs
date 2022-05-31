@@ -8,11 +8,14 @@ import Data.List.NonEmpty ( NonEmpty ( (:|) ) )
 
 import Test.Hspec ( Spec, describe, it, shouldBe, shouldSatisfy )
 
+import Presentable.Data.Geometry ( Rect ( Rect ) )
 import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
+                                  , Slide ( SingleContentSlide )
+                                  , SlideContent ( BulletList )
                                   , TextBlock ( TextBlock )
                                   , plainTextBlock
                                   )
-import Presentable.Process.Slideshow ( wrapAt, wrapRelaxedAt )
+import Presentable.Process.Slideshow ( fitOneTo, wrapAt, wrapRelaxedAt )
 
 
 spec :: Spec
@@ -56,3 +59,24 @@ spec = do
                            , [("exceedingly", PlainText)]
                            , [("long words", PlainText)]
                            ]
+    describe "fitOneTo" $ do
+        it "splits a long bullet list leaving items intact" $ do
+            fitOneTo (Rect 12 7) testBulletListSlide `shouldBe`
+                Right [ SingleContentSlide
+                            "Slide Title"
+                            (BulletList [ plainTextBlock "First item"
+                                        , plainTextBlock "Second item"
+                                        , plainTextBlock "Third item"
+                                        ])
+                      , SingleContentSlide
+                            "Slide Title"
+                            (BulletList [ plainTextBlock "Fourth item" ])
+                      ]
+  where
+    testBulletListSlide = SingleContentSlide
+        "Slide Title"
+        (BulletList [ plainTextBlock "First item"
+                    , plainTextBlock "Second item"
+                    , plainTextBlock "Third item"
+                    , plainTextBlock "Fourth item"
+                    ])

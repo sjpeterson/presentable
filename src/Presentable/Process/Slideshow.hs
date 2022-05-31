@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
-module Presentable.Process.Slideshow ( fitTo, wrapAt, wrapRelaxedAt ) where
+module Presentable.Process.Slideshow ( fitTo, fitOneTo, wrapAt, wrapRelaxedAt ) where
 
 import Data.Foldable ( foldr' )
 import Data.List.NonEmpty ( NonEmpty ( (:|) ), (<|) )
@@ -10,14 +10,18 @@ import qualified Data.List.NonEmpty as NE
 import Data.Text ( Text )
 import qualified Data.Text as T
 
-import Presentable.Data.Geometry ( Rect ( Rect, rectRows ) )
-import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
-                                  , Slide ( SingleContentSlide
-                                          , TitleSlide
-                                          )
-                                  , TaggedText
-                                  , TextBlock ( unTextBlock )
-                                  )
+import Presentable.Data.Geometry ( Rect ( Rect, rectColumns, rectRows )
+                                 , hShrink
+                                 , vShrink
+                                 )
+import Presentable.Data.Slideshow
+    ( InlineTextTag ( PlainText )
+    , Slide ( SingleContentSlide , TitleSlide )
+    , SlideContent ( BulletList, NoContent )
+    , TaggedText
+    , TextBlock ( unTextBlock )
+    , plainTextBlock
+    )
 
 type WrappingError = Text
 
@@ -31,9 +35,25 @@ fitTo _ slides = Right slides
 
 -- | Fit a single slide to the given dimensions.
 fitOneTo :: Rect -> Slide -> Either WrappingError (NonEmpty Slide)
-fitOneTo Rect {..} slide = case slide of
+fitOneTo rect@(Rect {..}) slide = case slide of
     TitleSlide         title subtitle -> Right [slide]
-    SingleContentSlide title content  -> Right [slide]
+    SingleContentSlide title content  ->
+        let titleRows = NE.length <$> wrapAt rectColumns (plainTextBlock title)
+        in fmap (fmap (SingleContentSlide title)) <$>
+            flip fitContentTo content =<< vShrink rect <$> titleRows
+
+-- | Fit slide contents to the given dimensions.
+fitContentTo :: Rect
+             -> SlideContent
+             -> Either WrappingError (NonEmpty SlideContent)
+fitContentTo _         NoContent          = Right [NoContent]
+fitContentTo Rect {..} (BulletList items) = fmap BulletList <$>
+    vSplit rectColumns items
+
+vSplit :: Int
+       -> NonEmpty TextBlock
+       -> Either WrappingError (NonEmpty (NonEmpty TextBlock))
+vSplit = undefined
 
 -- | Compute the height of a slide at the given width.
 heightAtWidth :: Int -> Slide -> Int
@@ -43,30 +63,28 @@ heightAtWidth columns slide = case slide of
 
 -- | Wrap a text block to the given number of columns. Results in an error if
 -- some word is longer than the allowed width.
-wrapAt :: Int -> TextBlock -> Either WrappingError [NonEmpty TaggedText]
-wrapAt c = fmap (map unparticles) . wrapParticlesAt c . particles . unTextBlock
+wrapAt :: Int
+       -> TextBlock
+       -> Either WrappingError (NonEmpty (NonEmpty TaggedText))
+wrapAt c = fmap (fmap unparticles) . wrapParticlesAt c . particles . unTextBlock
 
 -- | Wrap particles of a text block to the given number of columns.
 wrapParticlesAt :: Int
                 -> NonEmpty TaggedText
-                -> Either WrappingError [NonEmpty TaggedText]
-wrapParticlesAt c (p :| ps) = reverse . map (NE.reverse . fst) <$>
+                -> Either WrappingError (NonEmpty (NonEmpty TaggedText))
+wrapParticlesAt c (p :| ps) = NE.reverse . fmap (NE.reverse . fst) <$>
     foldr' f initial (reverse ps)
   where
-    initial = Right [(p :| [], T.length $ fst p)]
+    initial = Right [([p], T.length $ fst p)]
     f _ error@(Left _) = error
-    f t (Right acc)    = if pLength > c
+    f t (Right (current@(particles, n) :| ps')) = if pLength > c
         then Left $ T.concat ["Particle '", fst t, "' is too long to fit"]
-        else Right $ case acc of
-            []                         -> [newRow]
-            current@(particles, n):ps' ->
-              let newLength = n + 1 + pLength
-              in if newLength > c
-                then newRow:current:ps'
-                else (t<|particles, newLength):ps'
+        else Right $ if newLength > c
+            then ([t], pLength)<|current:|ps'
+            else (t<|particles, newLength):|ps'
       where
-        newRow = (t:|[], pLength)
         pLength = T.length $ fst t
+        newLength = n + 1 + pLength
 
 -- | Wrap a text block to the given number of columns.
 wrapRelaxedAt :: Int -> TextBlock -> [NonEmpty TaggedText]

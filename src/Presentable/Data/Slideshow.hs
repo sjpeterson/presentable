@@ -21,7 +21,7 @@ data Slide = TitleSlide Title (Maybe Text)
     deriving (Eq, Show)
 
 -- | Slide content data type.
-data SlideContent = BulletList [TextBlock]
+data SlideContent = BulletList (NonEmpty TextBlock)
                   | NoContent
     deriving (Eq, Show)
 

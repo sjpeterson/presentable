@@ -6,6 +6,7 @@ module Presentable.Parse.Slideshow
     , parseSlide
     ) where
 
+import qualified Control.Monad.Combinators.NonEmpty as NE
 import Data.Bifunctor ( first )
 import Data.Functor ( void )
 import Data.List.NonEmpty ( NonEmpty ( (:|) ) )
@@ -123,7 +124,7 @@ slideContentParser = try bulletListParser <|> noContentParser
 
 -- | Parser for a bullet list.
 bulletListParser :: Parser SlideContent
-bulletListParser = emptyLine >> BulletList <$> some bulletListItemParser
+bulletListParser = emptyLine >> BulletList <$> NE.some bulletListItemParser
 
 -- | Parser for an item in a bullet list.
 bulletListItemParser :: Parser TextBlock

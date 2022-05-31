@@ -79,7 +79,7 @@ drawSlide columns (SingleContentSlide title content) = padBottom Max $
 drawContent :: Int -> SlideContent -> Widget Name
 drawContent _       NoContent          = emptyWidget
 drawContent columns (BulletList items) = padRight Max $
-    vBox $ map (drawBulletListItem columns) items
+    vBox $ map (drawBulletListItem columns) (NE.toList items)
 
 -- | Draw a bullet list item to the given width.
 drawBulletListItem :: Int -> TextBlock -> Widget Name

@@ -49,6 +49,7 @@ library
     , megaparsec
     , microlens
     , mtl
+    , parser-combinators
     , text
     , vty
   default-language: Haskell2010
