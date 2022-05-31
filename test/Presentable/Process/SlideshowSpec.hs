@@ -15,7 +15,7 @@ import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
                                   , TextBlock ( TextBlock )
                                   , plainTextBlock
                                   )
-import Presentable.Process.Slideshow ( fitOneTo, wrapAt, wrapRelaxedAt )
+import Presentable.Process.Slideshow ( fitTo, fitOneTo, wrapAt, wrapRelaxedAt )
 
 
 spec :: Spec
@@ -72,6 +72,25 @@ spec = do
                             "Slide Title"
                             (BulletList [ plainTextBlock "Fourth item" ])
                       ]
+    describe "fitTo" $ do
+        it "splits a long bullet list leaving items intact" $ do
+            fitTo (Rect 12 7) [testBulletListSlide] `shouldBe`
+                Right [ SingleContentSlide
+                            "Slide Title"
+                            (BulletList [ plainTextBlock "First item"
+                                        , plainTextBlock "Second item"
+                                        , plainTextBlock "Third item"
+                                        ])
+                      , SingleContentSlide
+                            "Slide Title"
+                            (BulletList [ plainTextBlock "Fourth item" ])
+                      ]
+        it "fails if a bullet list item is too large to fit" $ do
+            fitTo (Rect 12 7) [testLongItemBulletListSlide] `shouldSatisfy`
+                isLeft
+        it "fails if the first bullet list item is too large to fit" $ do
+            fitTo (Rect 12 7) [testLongFirstItemBulletListSlide] `shouldSatisfy`
+                isLeft
   where
     testBulletListSlide = SingleContentSlide
         "Slide Title"
@@ -80,3 +99,17 @@ spec = do
                     , plainTextBlock "Third item"
                     , plainTextBlock "Fourth item"
                     ])
+    testLongItemBulletListSlide = SingleContentSlide
+        "Slide Title"
+        (BulletList
+            [ plainTextBlock "First item"
+            , plainTextBlock "A long item that does not fit in the space given"
+            , plainTextBlock "Third item"
+            ])
+    testLongFirstItemBulletListSlide = SingleContentSlide
+        "Slide Title"
+        (BulletList
+            [ plainTextBlock "A long item that does not fit in the space given"
+            , plainTextBlock "Second item"
+            , plainTextBlock "Third item"
+            ])

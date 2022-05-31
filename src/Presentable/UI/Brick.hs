@@ -51,6 +51,11 @@ import Presentable.Process.Slideshow ( fitTo )
 import Presentable.UI.Brick.Draw ( Name, drawUI )
 import Presentable.UI.Brick.Attributes ( bulletAttr, errorAttr, titleAttr )
 
+-- | run the Brick application
+runBrick :: AppEnv -> IO ()
+runBrick appEnv = defaultMain (app appEnv) (initState appEnv) >> return ()
+
+-- | Create a Brick application from the environment.
 app :: AppEnv -> App AppState e Name
 app appEnv = App { appDraw = drawUI appEnv
                  , appChooseCursor = neverShowCursor
@@ -59,6 +64,8 @@ app appEnv = App { appDraw = drawUI appEnv
                  , appAttrMap = const attributeMap
                  }
 
+-- | Brick application start event. Gets terminal size and processes
+-- slideshow accordingly at startup.
 appStart :: AppEnv -> AppState -> EventM Name AppState
 appStart appEnv appState = do
     vtyOutput <- V.outputIface <$> getVtyHandle
@@ -67,9 +74,7 @@ appStart appEnv appState = do
     return $ appState & appStateColumns .~ rectColumns rect
                       & appStateSlidesBuffer .~ (makeBuffer appEnv rect)
 
-runBrick :: AppEnv -> IO ()
-runBrick appEnv = defaultMain (app appEnv) (initState appEnv) >> return ()
-
+-- | Brick application event handler.
 handleEvent :: AppEnv
             -> AppState
             -> BrickEvent Name e
@@ -88,6 +93,7 @@ handleEvent appEnv appState event = case event of
         appState & appStateColumns .~ rectColumns
                  & appStateSlidesBuffer .~ (makeBuffer appEnv rect)
 
+-- | Brick application attribute map
 attributeMap :: AttrMap
 attributeMap = attrMap V.defAttr
     [ (titleAttr, fg V.yellow `V.withStyle` V.bold)
