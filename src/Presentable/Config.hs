@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Presentable.Config
     ( Config ( Config, configMaxDimensions )
     , getConfig
@@ -13,15 +15,16 @@ type ConfigError = Text
 
 -- | Config data type.
 data Config
-  = Config { configMaxDimensions :: Rect }
+  = Config { configMaxDimensions :: Rect
+           }
 
 -- | The default config.
 defaultConfig :: Config
-defaultConfig = Config { configMaxDimensions = defaultDimensions }
+defaultConfig = Config {..}
   where
-    defaultDimensions = Rect { rectColumns = 80
-                             , rectRows = 38
-                             }
+    configMaxDimensions = Rect { rectColumns = 80
+                               , rectRows = 38
+                               }
 
 -- | A function to read config from file.
 getConfig :: IO (Either ConfigError Config)

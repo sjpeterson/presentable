@@ -26,10 +26,11 @@ import Lens.Micro ( (^.) )
 
 import Presentable.App.Env ( AppEnv ( slideshow ) )
 import Presentable.App.State ( AppState
-                             , appStateColumns
+                             , appStateRect
                              , appStateSlidesBuffer
                              )
 import Presentable.Data.Buffer ( bufferCurrent )
+import Presentable.Data.Geometry ( Rect ( Rect ) )
 import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
                                   , Slide ( SingleContentSlide , TitleSlide )
                                   , SlideContent ( BulletList, NoContent )
@@ -45,14 +46,14 @@ type Name = ()
 -- | Draw the application state.
 drawUI :: AppEnv -> AppState -> [Widget Name]
 drawUI appEnv appState =
-    [ C.center $ hLimit 80 $ vLimit 24 $ (padAll 1) inner ]
+    [ C.center $ (padAll 1) $ hLimit columns $ vLimit rows $ inner ]
   where
     inner = vBox [ padBottom Max $ padRight Max $ slide
                  , copyrightNotice
                  ]
     slide = either drawError (drawSlide columns) $
         bufferCurrent <$> appState ^. appStateSlidesBuffer
-    columns = appState ^. appStateColumns
+    Rect columns rows = appState ^. appStateRect
     copyrightNotice = case (slideshowCopyright $ slideshow appEnv) of
         Nothing        -> emptyWidget
         Just copyright -> padLeft Max $ str $ show copyright

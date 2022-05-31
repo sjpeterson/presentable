@@ -38,14 +38,14 @@ import Brick
 import qualified Graphics.Vty as V
 import Lens.Micro ( (&), (.~), over )
 
-import Presentable.App.Env ( AppEnv ( slideshow ) )
+import Presentable.App.Env ( AppEnv ( AppEnv, maxDimensions, slideshow ) )
 import Presentable.App.State ( AppState
-                             , appStateColumns
+                             , appStateRect
                              , appStateSlidesBuffer
                              , initState
                              )
 import Presentable.Data.Buffer ( Buffer, bufferOf, next, prev )
-import Presentable.Data.Geometry ( Rect ( Rect, rectColumns ) )
+import Presentable.Data.Geometry ( Rect ( Rect ), limit )
 import Presentable.Data.Slideshow ( Slide, Slideshow ( slideshowSlides ) )
 import Presentable.Process.Slideshow ( fitTo )
 import Presentable.UI.Brick.Draw ( Name, drawUI )
@@ -69,9 +69,8 @@ app appEnv = App { appDraw = drawUI appEnv
 appStart :: AppEnv -> AppState -> EventM Name AppState
 appStart appEnv appState = do
     vtyOutput <- V.outputIface <$> getVtyHandle
-    (columns, rows) <- liftIO (V.displayBounds vtyOutput)
-    let rect = Rect (columns - 2) (rows - 2)
-    return $ appState & appStateColumns .~ rectColumns rect
+    rect <- liftIO (slideshowRect appEnv <$> V.displayBounds vtyOutput)
+    return $ appState & appStateRect .~ rect
                       & appStateSlidesBuffer .~ (makeBuffer appEnv rect)
 
 -- | Brick application event handler.
@@ -84,14 +83,19 @@ handleEvent appEnv appState event = case event of
     (VtyEvent (V.EvKey V.KRight []))     -> continue nextSlide
     (VtyEvent (V.EvKey V.KLeft  []))     -> continue prevSlide
     (VtyEvent (V.EvResize columns rows)) -> continue $
-        fitSlides (Rect (columns - 2) (rows - 2))
+        fitSlides (slideshowRect appEnv (columns, rows))
     _                                    -> continue appState
   where
     nextSlide = over appStateSlidesBuffer (fmap next) appState
     prevSlide = over appStateSlidesBuffer (fmap prev) appState
-    fitSlides rect@(Rect {..}) =
-        appState & appStateColumns .~ rectColumns
+    fitSlides rect =
+        appState & appStateRect .~ rect
                  & appStateSlidesBuffer .~ (makeBuffer appEnv rect)
+
+-- | Compute the slideshow rectangle for some screen size
+slideshowRect :: AppEnv -> (Int, Int) -> Rect
+slideshowRect AppEnv {..} (columns, rows) =
+    limit maxDimensions $ Rect (columns - 2) (rows - 2)
 
 -- | Brick application attribute map
 attributeMap :: AttrMap
