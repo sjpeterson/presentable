@@ -52,7 +52,7 @@ drawUI appEnv appState =
                  , copyrightNotice
                  ]
     slide = either drawError (drawSlide columns) $
-        bufferCurrent <$> appState ^. appStateSlidesBuffer
+        fst . bufferCurrent <$> appState ^. appStateSlidesBuffer
     Rect columns rows = appState ^. appStateRect
     copyrightNotice = case (slideshowCopyright $ slideshow appEnv) of
         Nothing        -> emptyWidget

@@ -15,12 +15,12 @@ import Presentable.Data.Slideshow ( Slide )
 
 -- | Application state type.
 data AppState = AppState
-    { _appStateSlidesBuffer :: Either Text (Buffer Slide)
+    { _appStateSlidesBuffer :: Either Text (Buffer (Slide,  Int))
     , _appStateRect :: Rect
     } deriving ( Eq, Show )
 
 -- | A lens for the slides buffer.
-appStateSlidesBuffer :: Lens' AppState (Either Text (Buffer Slide))
+appStateSlidesBuffer :: Lens' AppState (Either Text (Buffer (Slide, Int)))
 appStateSlidesBuffer = lens
     _appStateSlidesBuffer
     (\appState b -> appState { _appStateSlidesBuffer = b })

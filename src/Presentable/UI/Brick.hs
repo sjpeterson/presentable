@@ -13,6 +13,7 @@ module Presentable.UI.Brick
     ) where
 
 import Control.Monad.IO.Class ( liftIO )
+import Data.Maybe ( isJust )
 import Data.Text ( Text )
 
 import Brick
@@ -46,8 +47,12 @@ import Presentable.App.State ( AppState
                              )
 import Presentable.Data.Buffer ( Buffer, bufferOf, next, prev )
 import Presentable.Data.Geometry ( Rect ( Rect ), limit )
-import Presentable.Data.Slideshow ( Slide, Slideshow ( slideshowSlides ) )
-import Presentable.Process.Slideshow ( fitTo )
+import Presentable.Data.Slideshow ( Slide
+                                  , Slideshow ( slideshowCopyright
+                                              , slideshowSlides
+                                              )
+                                  )
+import Presentable.Process.Slideshow ( fitTo, zipValues )
 import Presentable.UI.Brick.Draw ( Name, drawUI )
 import Presentable.UI.Brick.Attributes ( bulletAttr, errorAttr, titleAttr )
 
@@ -106,6 +111,9 @@ attributeMap = attrMap V.defAttr
     ]
 
 -- | Make a buffer of slides fitting the given rectangle.
-makeBuffer :: AppEnv -> Rect -> Either Text (Buffer Slide)
-makeBuffer appEnv rect =
-    (fmap bufferOf) $ fitTo rect $ slideshowSlides $ slideshow appEnv
+makeBuffer :: AppEnv -> Rect -> Either Text (Buffer (Slide, Int))
+makeBuffer AppEnv {..} rect = fmap (bufferOf . zipValues) $
+    fitTo rect footerHeight $ slideshowSlides $ slideshow
+  where
+    footerHeight = if isJust $ slideshowCopyright slideshow then 2 else 0
+

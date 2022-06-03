@@ -4,14 +4,16 @@
 
 module Presentable.Process.Slideshow
     ( fitTo
-    , fitOneTo
     , wrapAt
     , wrapRelaxedAt
+    , zipValues
     ) where
 
+import Control.Applicative ( liftA2 )
 import Data.Foldable ( foldr' )
 import Data.List.NonEmpty ( NonEmpty ( (:|) ), (<|) )
 import qualified Data.List.NonEmpty as NE
+import Data.Maybe ( fromMaybe )
 import Data.Text ( Text )
 import qualified Data.Text as T
 
@@ -31,21 +33,33 @@ import Presentable.Data.Slideshow
 type WrappingError = Text
 
 -- | Fit a non-empty list of slides to the given dimensions.
-fitTo :: Rect -> NonEmpty Slide -> Either WrappingError (NonEmpty Slide)
-fitTo rect slides = foldr' f (fitOneTo rect (NE.last slides)) (NE.init slides)
+fitTo :: Rect -> Int -> NonEmpty Slide -> Either WrappingError (NonEmpty Slide)
+fitTo rect footerHeight slides =
+    foldr' f (fitOneTo rect footerHeight (NE.last slides)) (NE.init slides)
   where
-    f slide fittedSlides = case fitOneTo rect slide of
+    f slide fittedSlides = case fitOneTo rect footerHeight slide of
         Left  err     -> Left err
         Right slides' -> fmap (slides' <>) fittedSlides
 
 -- | Fit a single slide to the given dimensions.
-fitOneTo :: Rect -> Slide -> Either WrappingError (NonEmpty Slide)
-fitOneTo rect@(Rect {..}) slide = case slide of
-    TitleSlide         title subtitle -> Right [slide]
+fitOneTo :: Rect -> Int -> Slide -> Either WrappingError (NonEmpty Slide)
+fitOneTo rect@(Rect {..}) footerHeight slide = case slide of
+    TitleSlide         title subtitle ->
+        let rows = liftA2 (+)
+                (wrappedHeight title)
+                (fmap (1 +) $ fromMaybe (Right 0) (wrappedHeight <$> subtitle))
+        in case rows of
+            Left err -> Left err
+            Right rows   -> if rows > rectRows - 2 * footerHeight
+                then Left "Title slide is too tall to fit"
+                else Right [slide]
     SingleContentSlide title content  ->
-        let titleRows = wrappedHeightAt rectColumns (plainTextBlock title)
+        let titleRows = wrappedHeight title
         in fmap (fmap (SingleContentSlide title)) <$>
-            flip fitContentTo content =<< vShrink rect <$> (1 +) <$> titleRows
+            flip fitContentTo content =<< vShrink rect <$>
+                (1 + footerHeight + ) <$> titleRows
+  where
+    wrappedHeight = wrappedHeightAt rectColumns . plainTextBlock
 
 -- | Fit slide contents to the given dimensions.
 fitContentTo :: Rect
@@ -146,3 +160,23 @@ unparticles :: NonEmpty TaggedText -> NonEmpty TaggedText
 unparticles ps@(_ :| []) = ps
 unparticles ((s1, PlainText) :| ((s2, PlainText):ps)) =
     unparticles $ (T.unwords [s1, s2], PlainText) :| ps
+
+-- | Pair each slide with their positional value.
+zipValues :: NonEmpty Slide -> NonEmpty (Slide, Int)
+zipValues slides = NE.zip slides slideValues
+  where
+    slideValues = NE.reverse $ foldr' f [0] (reverse $ NE.init slides)
+    f slide values@(x:|_) = (slideValue slide + x)<|values
+
+-- | Compute the value of a slide. The value is used to track current position
+-- in a slideshow.
+slideValue :: Slide -> Int
+slideValue (TitleSlide         _ _           ) = 1
+slideValue (SingleContentSlide _ slideContent) = slideContentValue slideContent
+
+-- | Compute the value of some slide content. The value is used to track current
+-- position in slideshow.
+slideContentValue :: SlideContent -> Int
+slideContentValue (BulletList items) = NE.length items
+slideContentValue NoContent          = 1
+

@@ -8,7 +8,7 @@ import Data.Text ( Text, unpack )
 -- | A type alias for the slideshow title
 type Title = Text
 
--- | Slideshow data type. A slidshow consists of optional copyright information
+-- | Slideshow data type. A slideshow consists of optional copyright information
 -- and a non-empty list of slides.
 data Slideshow = Slideshow
     { slideshowCopyright :: Maybe Copyright

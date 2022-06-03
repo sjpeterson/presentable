@@ -10,12 +10,12 @@ import Test.Hspec ( Spec, describe, it, shouldBe, shouldSatisfy )
 
 import Presentable.Data.Geometry ( Rect ( Rect ) )
 import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
-                                  , Slide ( SingleContentSlide )
+                                  , Slide ( SingleContentSlide, TitleSlide )
                                   , SlideContent ( BulletList )
                                   , TextBlock ( TextBlock )
                                   , plainTextBlock
                                   )
-import Presentable.Process.Slideshow ( fitTo, fitOneTo, wrapAt, wrapRelaxedAt )
+import Presentable.Process.Slideshow ( fitTo, wrapAt, wrapRelaxedAt, zipValues )
 
 
 spec :: Spec
@@ -59,9 +59,27 @@ spec = do
                            , [("exceedingly", PlainText)]
                            , [("long words", PlainText)]
                            ]
-    describe "fitOneTo" $ do
+    describe "zipValues" $ do
+        it "pairs the first slide with position 0" $ do
+            zipValues [testTitleSlide] `shouldBe` [(testTitleSlide, 0)]
+            zipValues [testBulletListSlide] `shouldBe`
+                [(testBulletListSlide, 0)]
+        it "zips with a cumulative sum of values" $ do
+            zipValues [testTitleSlide, testBulletListSlide, testBulletListSlide]
+                `shouldBe` [ (testTitleSlide, 0)
+                           , (testBulletListSlide, 1)
+                           , (testBulletListSlide, 5)
+                           ]
+    describe "fitTo" $ do
+        it "leaves a small enough title slide intact" $ do
+            fitTo (Rect 12 4) 0 [testTitleSlide] `shouldBe`
+                Right [testTitleSlide]
+        it "fails if a title slide is too large" $ do
+            fitTo (Rect 12 3) 0 [testTitleSlide] `shouldSatisfy` isLeft
+        it "deducts footer height on both sides of a title slide" $ do
+            fitTo (Rect 12 7) 2 [testTitleSlide] `shouldSatisfy` isLeft
         it "splits a long bullet list leaving items intact" $ do
-            fitOneTo (Rect 12 7) testBulletListSlide `shouldBe`
+            fitTo (Rect 12 7) 0 [testBulletListSlide] `shouldBe`
                 Right [ SingleContentSlide
                             "Slide Title"
                             (BulletList [ plainTextBlock "First item"
@@ -72,9 +90,8 @@ spec = do
                             "Slide Title"
                             (BulletList [ plainTextBlock "Fourth item" ])
                       ]
-    describe "fitTo" $ do
-        it "splits a long bullet list leaving items intact" $ do
-            fitTo (Rect 12 7) [testBulletListSlide] `shouldBe`
+        it "deducts footer height at one end of a bullet list slide" $ do
+            fitTo (Rect 12 9) 2 [testBulletListSlide] `shouldBe`
                 Right [ SingleContentSlide
                             "Slide Title"
                             (BulletList [ plainTextBlock "First item"
@@ -86,12 +103,13 @@ spec = do
                             (BulletList [ plainTextBlock "Fourth item" ])
                       ]
         it "fails if a bullet list item is too large to fit" $ do
-            fitTo (Rect 12 7) [testLongItemBulletListSlide] `shouldSatisfy`
+            fitTo (Rect 12 7) 0 [testLongItemBulletListSlide] `shouldSatisfy`
                 isLeft
         it "fails if the first bullet list item is too large to fit" $ do
-            fitTo (Rect 12 7) [testLongFirstItemBulletListSlide] `shouldSatisfy`
+            fitTo (Rect 12 7) 0 [testLongFirstItemBulletListSlide] `shouldSatisfy`
                 isLeft
   where
+    testTitleSlide = TitleSlide "Presentation" (Just "With a subtitle")
     testBulletListSlide = SingleContentSlide
         "Slide Title"
         (BulletList [ plainTextBlock "First item"
