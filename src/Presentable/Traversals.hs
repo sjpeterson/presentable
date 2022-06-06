@@ -29,5 +29,5 @@ splitWhen valueOf c agg fail (x:|xs) = NE.reverse .fmap (NE.reverse . fst) <$>
         then Left $ fail y
         else Right $ let newV = agg currentV nextV
             in if c newV
-                then ([y], newV)<|current:|rest
+                then ([y], nextV)<|current:|rest
                 else (y<|ys, newV):|rest

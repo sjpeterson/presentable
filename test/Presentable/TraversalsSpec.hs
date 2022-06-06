@@ -20,8 +20,8 @@ spec = do
             mapExpandM selfReplicate [0, 1, 2] `shouldSatisfy` isLeft
     describe "splitWhen" $ do
         it "splits from the start, preserving order" $ do
-            splitWhen idNotZero (> 5) (+) id [1..4] `shouldBe`
-                Right [[1, 2], [3], [4]]
+            splitWhen idNotZero (> 5) (+) id [1, 2, 3, 1, 4] `shouldBe`
+                Right [[1, 2], [3, 1], [4]]
         it "fails if an individual item violates contraint" $ do
             splitWhen idNotZero (> 5) (+) id [6, 3, 2] `shouldSatisfy` isLeft
             splitWhen idNotZero (> 5) (+) id [3, 6, 2] `shouldSatisfy` isLeft

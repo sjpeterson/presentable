@@ -23,7 +23,7 @@ defaultConfig :: Config
 defaultConfig = Config {..}
   where
     configMaxDimensions = Rect { rectColumns = 80
-                               , rectRows = 38
+                               , rectRows = 22
                                }
 
 -- | A function to read config from file.

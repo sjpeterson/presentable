@@ -68,7 +68,7 @@ spec = do
             zipValues [testTitleSlide, testBulletListSlide, testBulletListSlide]
                 `shouldBe` [ (testTitleSlide, 0)
                            , (testBulletListSlide, 1)
-                           , (testBulletListSlide, 5)
+                           , (testBulletListSlide, 6)
                            ]
     describe "fitTo" $ do
         it "leaves a small enough title slide intact" $ do
@@ -88,7 +88,9 @@ spec = do
                                         ])
                       , SingleContentSlide
                             "Slide Title"
-                            (BulletList [ plainTextBlock "Fourth item" ])
+                            (BulletList [ plainTextBlock "Fourth item"
+                                        , plainTextBlock "Fifth item"
+                                        ])
                       ]
         it "deducts footer height at one end of a bullet list slide" $ do
             fitTo (Rect 12 9) 2 [testBulletListSlide] `shouldBe`
@@ -100,7 +102,9 @@ spec = do
                                         ])
                       , SingleContentSlide
                             "Slide Title"
-                            (BulletList [ plainTextBlock "Fourth item" ])
+                            (BulletList [ plainTextBlock "Fourth item"
+                                        , plainTextBlock "Fifth item"
+                                        ])
                       ]
         it "fails if a bullet list item is too large to fit" $ do
             fitTo (Rect 12 7) 0 [testLongItemBulletListSlide] `shouldSatisfy`
@@ -116,6 +120,7 @@ spec = do
                     , plainTextBlock "Second item"
                     , plainTextBlock "Third item"
                     , plainTextBlock "Fourth item"
+                    , plainTextBlock "Fifth item"
                     ])
     testLongItemBulletListSlide = SingleContentSlide
         "Slide Title"
