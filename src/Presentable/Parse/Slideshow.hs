@@ -54,7 +54,7 @@ parseSlideshow filePath = first handleError . runParser slideshowParser filePath
 parseSlide :: FilePath -> Text -> Either ParsingError Slide
 parseSlide filePath = first handleError . runParser slideParser filePath
 
--- | Convert Megaparsec error to own ParsingError
+-- | Convert Megaparsec error to own ParsingError.
 handleError :: ParseErrorBundle Text Void -> ParsingError
 handleError = T.pack . errorBundlePretty
 

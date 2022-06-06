@@ -91,7 +91,7 @@ drawBulletListItem columns tb =
 drawTextBlock :: Int -> TextBlock -> Widget Name
 drawTextBlock columns tb = vBox $ map drawLine $ wrapRelaxedAt columns tb
 
--- | Draw a single line of text
+-- | Draw a single line of text.
 drawLine :: NonEmpty TaggedText -> Widget Name
 drawLine line = drawTaggedText t <+> case ts of
     Nothing    -> emptyWidget
@@ -99,6 +99,6 @@ drawLine line = drawTaggedText t <+> case ts of
   where
     (t, ts) = NE.uncons line
 
--- | Draw a single tagged text element
+-- | Draw a single tagged text element.
 drawTaggedText :: TaggedText -> Widget Name
 drawTaggedText (s, PlainText) = txt s

@@ -5,7 +5,7 @@ module Presentable.App.Monad where
 import Control.Monad.Reader ( ReaderT )
 import Presentable.App.Env ( AppEnv )
 
--- | App monad type
+-- | App monad type.
 newtype AppT m a = AppT
     { runApp :: ReaderT AppEnv m a
     } deriving
@@ -14,5 +14,5 @@ newtype AppT m a = AppT
     , Monad
     )
 
--- | An alias for AppT IO
+-- | An alias for AppT IO.
 type AppM = AppT IO

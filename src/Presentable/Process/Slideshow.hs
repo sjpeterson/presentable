@@ -29,17 +29,13 @@ import Presentable.Data.Slideshow
     , TextBlock ( unTextBlock )
     , plainTextBlock
     )
+import Presentable.Traversals ( mapExpandM, splitWhen )
 
 type WrappingError = Text
 
 -- | Fit a non-empty list of slides to the given dimensions.
 fitTo :: Rect -> Int -> NonEmpty Slide -> Either WrappingError (NonEmpty Slide)
-fitTo rect footerHeight slides =
-    foldr' f (fitOneTo rect footerHeight (NE.last slides)) (NE.init slides)
-  where
-    f slide fittedSlides = case fitOneTo rect footerHeight slide of
-        Left  err     -> Left err
-        Right slides' -> fmap (slides' <>) fittedSlides
+fitTo rect footerHeight = mapExpandM (fitOneTo rect footerHeight)
 
 -- | Fit a single slide to the given dimensions.
 fitOneTo :: Rect -> Int -> Slide -> Either WrappingError (NonEmpty Slide)
@@ -74,25 +70,11 @@ fitContentTo rect (BulletList items) = fmap BulletList <$>
 vSplit :: Rect
        -> NonEmpty TextBlock
        -> Either WrappingError (NonEmpty (NonEmpty TextBlock))
-vSplit Rect {..} (b:|bs) = NE.reverse . fmap (NE.reverse . fst) <$>
-    foldr' f initial (reverse bs)
-  where
-    initial = case wrappedHeightAt rectColumns b of
-        Left err -> Left err
-        Right blockHeight -> if blockHeight > rectRows
-            then Left "A text block is too large to fit"
-            else Right [([b], blockHeight)]
-    f _ error@(Left _) = error
-    f block (Right (current@(blocks, currentHeight) :| bs')) =
-        case wrappedHeightAt rectColumns block of
-            Left err -> Left err
-            Right blockHeight ->
-                let newHeight = currentHeight + blockHeight
-                in if blockHeight > rectRows
-                    then Left $ "A text block is too large to fit"
-                    else Right $ if newHeight > rectRows
-                        then ([block], blockHeight)<|current:|bs'
-                        else (block<|blocks, newHeight):|bs'
+vSplit Rect {..} = splitWhen
+    (wrappedHeightAt rectColumns)
+    (> rectRows)
+    (+)
+    (const "A text block is too large to fit")
 
 -- | Compute the height of a text block wrapped at the given number of columns.
 wrappedHeightAt :: Int -> TextBlock -> Either WrappingError Int
@@ -109,19 +91,9 @@ wrapAt c = fmap (fmap unparticles) . wrapParticlesAt c . particles . unTextBlock
 wrapParticlesAt :: Int
                 -> NonEmpty TaggedText
                 -> Either WrappingError (NonEmpty (NonEmpty TaggedText))
-wrapParticlesAt c (p :| ps) = NE.reverse . fmap (NE.reverse . fst) <$>
-    foldr' f initial (reverse ps)
+wrapParticlesAt c = splitWhen (Right . T.length . fst) (> c) ((+) . (1 +)) fail
   where
-    initial = Right [([p], T.length $ fst p)]
-    f _        error@(Left _)                          = error
-    f particle (Right (current@(particles, n) :| ps')) = if particleLength > c
-        then Left $ T.concat ["Particle '", fst particle, "' is too long to fit"]
-        else Right $ if newLength > c
-            then ([particle], particleLength)<|current:|ps'
-            else (particle<|particles, newLength):|ps'
-      where
-        particleLength = T.length $ fst particle
-        newLength = n + 1 + particleLength
+    fail p = T.concat ["Particle '", fst p, "' is too long to fit"]
 
 -- | Wrap a text block to the given number of columns.
 wrapRelaxedAt :: Int -> TextBlock -> [NonEmpty TaggedText]

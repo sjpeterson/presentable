@@ -11,7 +11,7 @@ data Buffer a = Buffer
     , bufferPrevious :: [a]
     } deriving ( Eq, Show )
 
--- | Create a buffer from a non-empty list
+-- | Create a buffer from a non-empty list.
 bufferOf :: NonEmpty a -> Buffer a
 bufferOf xs = Buffer (NE.head xs) (NE.tail xs) []
 

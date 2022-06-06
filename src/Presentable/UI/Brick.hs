@@ -1,13 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
--- |
--- Module
--- Copyright
--- License
---
--- Brick
-
 module Presentable.UI.Brick
     ( runBrick
     ) where

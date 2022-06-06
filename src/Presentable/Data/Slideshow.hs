@@ -5,7 +5,7 @@ module Presentable.Data.Slideshow where
 import Data.List.NonEmpty ( NonEmpty ( (:|) ) )
 import Data.Text ( Text, unpack )
 
--- | A type alias for the slideshow title
+-- | A type alias for the slideshow title.
 type Title = Text
 
 -- | Slideshow data type. A slideshow consists of optional copyright information
