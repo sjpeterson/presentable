@@ -77,9 +77,13 @@ handleEvent :: AppEnv
             -> BrickEvent Name e
             -> EventM Name (Next AppState)
 handleEvent appEnv appState event = case event of
-    (VtyEvent (V.EvKey V.KEsc   []))     -> halt appState
-    (VtyEvent (V.EvKey V.KRight []))     -> continue nextSlide
-    (VtyEvent (V.EvKey V.KLeft  []))     -> continue prevSlide
+    (VtyEvent (V.EvKey V.KEsc        [])) -> halt appState
+    (VtyEvent (V.EvKey V.KRight      [])) -> continue nextSlide
+    (VtyEvent (V.EvKey (V.KChar 'l') [])) -> continue nextSlide
+    (VtyEvent (V.EvKey (V.KChar ' ') [])) -> continue nextSlide
+    (VtyEvent (V.EvKey V.KLeft       [])) -> continue prevSlide
+    (VtyEvent (V.EvKey (V.KChar 'h') [])) -> continue prevSlide
+    (VtyEvent (V.EvKey V.KBS         [])) -> continue prevSlide
     (VtyEvent (V.EvResize columns rows)) -> continue $
         fitSlides (slideshowRect appEnv (columns, rows))
     _                                    -> continue appState
