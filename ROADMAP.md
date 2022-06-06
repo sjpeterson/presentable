@@ -32,6 +32,8 @@
   - [ ] title style
   - [ ] bullet style
   - [ ] error style
+- [ ] Options
+  - [ ] --check or -c to validate the slideshow file without presenting
 
 ## 0.1.1 - Nested bullet lists
 - [ ] Parse markdown
