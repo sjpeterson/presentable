@@ -8,13 +8,3 @@ Bullet list example
 - Markdown line-continuation 
   is supported
   for as many lines as you please
-- You
-  can
-  continue
-  on
-  as
-  many
-  lines
-  as
-  you
-  please
