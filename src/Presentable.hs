@@ -12,16 +12,18 @@ import Presentable.Parse.Slideshow ( parseSlideshow )
 import Presentable.UI.Brick ( runBrick )
 
 -- | Run the app with the path to a slideshow.
-runApp :: FilePath -> IO ()
-runApp slideshowFile = do
+runApp :: Bool -> FilePath -> IO ()
+runApp check slideshowFile = do
     parsed <- parseSlideshow slideshowFile <$> TIO.readFile slideshowFile
     case parsed of
         Left err -> TIO.hPutStrLn stderr err
-        Right slideshow -> do
-            config <- getConfig
-            case config of
-                Left err -> TIO.hPutStrLn stderr err
-                Right config -> bracket
-                    (mkEnv config slideshow)
-                    runBrick
-                    cleanupEnv
+        Right slideshow -> if check
+            then putStrLn $ unwords [slideshowFile, "is a valid slideshow"]
+            else do
+                config <- getConfig
+                case config of
+                    Left err -> TIO.hPutStrLn stderr err
+                    Right config -> bracket
+                        (mkEnv config slideshow)
+                        runBrick
+                        cleanupEnv
