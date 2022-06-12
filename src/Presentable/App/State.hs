@@ -17,7 +17,8 @@ import Presentable.Process.Slideshow ( fitTo, zipValues )
 
 -- | Application state type.
 data AppState = AppState
-    { _appStateSlidesBuffer :: Either Text (Buffer (Slide,  Int))
+    { _appStatePosition :: Int
+    , _appStateSlidesBuffer :: Either Text (Buffer (Slide,  Int))
     , _appStateRect :: Rect
     } deriving ( Eq, Show )
 
@@ -36,7 +37,8 @@ appStateRect = lens
 -- | Create the initial state from the environment.
 initState :: AppEnv -> AppState
 initState _ = AppState
-    { _appStateSlidesBuffer = Left "Not initialized"
+    { _appStatePosition = 0
+    , _appStateSlidesBuffer = Left "Not initialized"
     , _appStateRect = Rect 0 0
     }
 

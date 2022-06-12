@@ -24,3 +24,11 @@ next (Buffer x (nextX:xs) prevXs) = Buffer nextX xs (x:prevXs)
 prev :: Buffer a -> Buffer a
 prev buffer@(Buffer _ _ []) = buffer
 prev (Buffer x nextXs (prevX:prevXs)) = Buffer prevX (x:nextXs) prevXs
+
+-- | Step forward in the buffer until the next item meets the condition or the
+-- end of the buffer is reached.
+forwardUntil :: (a -> Bool) -> Buffer a -> Buffer a
+forwardUntil _ buffer@(Buffer _ [] _) = buffer
+forwardUntil condition buffer@(Buffer x (nextX:xs) prevXs) =
+    if condition nextX then buffer
+                       else forwardUntil condition $ Buffer nextX xs (x:prevXs)

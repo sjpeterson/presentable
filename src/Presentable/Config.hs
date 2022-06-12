@@ -10,8 +10,7 @@ import System.Directory ( XdgDirectory ( XdgConfig )
 import System.FilePath ( combine )
 
 import Presentable.Data.Config
-    ( Color ( Red, Blue, Yellow )
-    , Config ( Config )
+    ( Config ( Config )
     , Styles ( Styles, _bulletStyle, _errorStyle, _subtitleStyle, _titleStyle )
     , Style ( Style )
     , overloadedWith

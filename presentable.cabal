@@ -80,6 +80,7 @@ test-suite presentable-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Presentable.Data.BufferSpec
       Presentable.Data.SlideshowSpec
       Presentable.Parse.SlideshowSpec
       Presentable.Process.SlideshowSpec
