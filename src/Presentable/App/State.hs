@@ -1,16 +1,19 @@
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 module Presentable.App.State where
 
+import Data.Maybe ( isJust )
 import Data.Text ( Text )
 
 import Lens.Micro ( Lens', lens )
 
 import Presentable.App.Env ( AppEnv ( AppEnv, slideshow ) )
-import Presentable.Data.Buffer ( Buffer )
+import Presentable.Data.Buffer ( Buffer, bufferOf )
 import Presentable.Data.Geometry ( Rect ( Rect ) )
-import Presentable.Data.Slideshow ( Slide )
+import Presentable.Data.Slideshow ( Slide, slideshowSlides, slideshowCopyright )
+import Presentable.Process.Slideshow ( fitTo, zipValues )
 
 -- | Application state type.
 data AppState = AppState
@@ -36,3 +39,11 @@ initState _ = AppState
     { _appStateSlidesBuffer = Left "Not initialized"
     , _appStateRect = Rect 0 0
     }
+
+-- | Make a buffer of slides fitting the given rectangle.
+makeBuffer :: AppEnv -> Rect -> Either Text (Buffer (Slide, Int))
+makeBuffer AppEnv {..} rect = fmap (bufferOf . zipValues) $
+    fitTo rect footerHeight $ slideshowSlides $ slideshow
+  where
+    footerHeight = if isJust $ slideshowCopyright slideshow then 2 else 0
+
