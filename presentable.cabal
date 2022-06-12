@@ -32,7 +32,9 @@ library
       Presentable.App.Monad
       Presentable.App.State
       Presentable.Config
+      Presentable.Data.AesonOptions
       Presentable.Data.Buffer
+      Presentable.Data.Config
       Presentable.Data.Geometry
       Presentable.Data.Slideshow
       Presentable.Parse.Slideshow
@@ -47,14 +49,18 @@ library
       src
   ghc-options: -W
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , brick
+    , directory
+    , filepath
     , megaparsec
     , microlens
     , mtl
     , parser-combinators
     , text
     , vty
+    , yaml
   default-language: Haskell2010
 
 executable presentable

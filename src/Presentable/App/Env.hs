@@ -1,8 +1,12 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Presentable.App.Env where
 
-import Presentable.Config ( Config ( Config, configMaxDimensions ) )
+import Lens.Micro ( (^.) )
+
+import Presentable.Data.Config ( Config
+                               , Styles
+                               , configMaxDimensions
+                               , configStyles
+                               )
 import Presentable.Data.Geometry ( Rect )
 import Presentable.Data.Slideshow ( Slideshow )
 
@@ -10,14 +14,16 @@ import Presentable.Data.Slideshow ( Slideshow )
 data AppEnv = AppEnv
     { maxDimensions :: Rect
     , slideshow :: Slideshow
+    , styles :: Styles
     }
 
 -- | Create an environment.
 mkEnv :: Config -> Slideshow -> IO AppEnv
-mkEnv Config {..} slideshow = do
-    return $ AppEnv {..}
-  where
-    maxDimensions = configMaxDimensions
+mkEnv config slideshow = return AppEnv
+    { maxDimensions = config ^. configMaxDimensions
+    , slideshow     = slideshow
+    , styles        = config ^. configStyles
+    }
 
 -- | Clean up the environment.
 cleanupEnv :: AppEnv -> IO ()

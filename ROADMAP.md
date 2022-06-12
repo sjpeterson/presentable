@@ -26,12 +26,13 @@
   - [x] Press escape to exit
   - [x] Press h, right arrow or Enter to advance
   - [x] Press l, left arrow or backspace to go back
-- [ ] Configuration
-  - [ ] read from $XDG_CONFIG_HOME/default.yml if it exists
-  - [ ] max dimensions
-  - [ ] title style
-  - [ ] bullet style
-  - [ ] error style
+- [x] Configuration
+  - [x] read from $XDG_CONFIG_HOME/default.yml if it exists
+  - [x] max dimensions
+  - [x] title style
+  - [x] subtitle style
+  - [x] bullet style
+  - [x] error style
 - [x] Options
   - [x] --check or -c to validate the slideshow file without presenting
   - [x] --version or -v to print the version

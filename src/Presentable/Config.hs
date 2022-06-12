@@ -1,31 +1,60 @@
-{-# LANGUAGE RecordWildCards #-}
-
-module Presentable.Config
-    ( Config ( Config, configMaxDimensions )
-    , getConfig
-    ) where
+module Presentable.Config ( getConfig ) where
 
 import Data.Text ( Text )
+import qualified Data.Text as T
+import Data.Yaml ( decodeFileEither )
+import System.Directory ( XdgDirectory ( XdgConfig )
+                        , doesFileExist
+                        , getXdgDirectory
+                        )
+import System.FilePath ( combine )
 
-import Presentable.Data.Geometry
-    ( Rect ( Rect, rectColumns, rectRows ) )
+import Presentable.Data.Config
+    ( Color ( Red, Blue, Yellow )
+    , Config ( Config )
+    , Styles ( Styles, _bulletStyle, _errorStyle, _subtitleStyle, _titleStyle )
+    , Style ( Style )
+    , overloadedWith
+    )
+import Presentable.Data.Geometry ( Rect ( Rect, rectColumns, rectRows ) )
 
 -- | A type alias for config errors.
 type ConfigError = Text
 
--- | Config data type.
-data Config
-  = Config { configMaxDimensions :: Rect
-           }
-
 -- | The default config.
 defaultConfig :: Config
-defaultConfig = Config {..}
+defaultConfig = Config maxDimensions defaultStyles
   where
-    configMaxDimensions = Rect { rectColumns = 80
-                               , rectRows = 22
-                               }
+    maxDimensions = Rect { rectColumns = 80 , rectRows = 22 }
 
--- | A function to read config from file.
+-- | Default styles.
+defaultStyles :: Styles
+defaultStyles = Styles
+    { _bulletStyle   = defaultStyle
+    , _errorStyle    = defaultStyle
+    , _subtitleStyle = defaultStyle
+    , _titleStyle    = defaultStyle
+    }
+  where
+    defaultStyle = Style Nothing False False
+
+-- | Read config from file or fall back to default.
 getConfig :: IO (Either ConfigError Config)
-getConfig = return $ Right defaultConfig
+getConfig = do
+    userConfigPath <- getUserConfigPath
+    case userConfigPath of
+        Nothing   -> return $ Right defaultConfig
+        Just path -> do
+            userConfigDecodeResult <- decodeFileEither path
+            return $ case userConfigDecodeResult of
+                Left err -> Left $ T.pack $ show err
+                Right userConfig ->
+                    Right $ defaultConfig `overloadedWith` userConfig
+
+-- | Returns the user config path if it exists.
+getUserConfigPath :: IO (Maybe FilePath)
+getUserConfigPath = do
+    path <- flip combine "default.yml" <$>
+        getXdgDirectory XdgConfig "presentable"
+    fileExists <- doesFileExist path
+    return $ if fileExists then Just path else Nothing

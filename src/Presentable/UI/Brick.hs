@@ -6,6 +6,7 @@ module Presentable.UI.Brick
     ) where
 
 import Control.Monad.IO.Class ( liftIO )
+import Data.Bifunctor ( second )
 import Data.Maybe ( isJust )
 import Data.Text ( Text )
 
@@ -30,15 +31,22 @@ import Brick
     , neverShowCursor
     )
 import qualified Graphics.Vty as V
+import Graphics.Vty.Attributes ( Attr, defAttr )
 import Lens.Micro ( (&), (.~), over )
 
-import Presentable.App.Env ( AppEnv ( AppEnv, maxDimensions, slideshow ) )
+import Presentable.App.Env
+    ( AppEnv ( AppEnv, maxDimensions, slideshow, styles ) )
 import Presentable.App.State ( AppState
                              , appStateRect
                              , appStateSlidesBuffer
                              , initState
                              )
 import Presentable.Data.Buffer ( Buffer, bufferOf, next, prev )
+import Presentable.Data.Config
+    ( Color ( Black, Red, Green, Yellow, Blue, Magenta, Cyan, White )
+    , Style ( Style )
+    , Styles ( Styles, _titleStyle, _subtitleStyle, _errorStyle, _bulletStyle )
+    )
 import Presentable.Data.Geometry ( Rect ( Rect ), limit )
 import Presentable.Data.Slideshow ( Slide
                                   , Slideshow ( slideshowCopyright
@@ -47,7 +55,11 @@ import Presentable.Data.Slideshow ( Slide
                                   )
 import Presentable.Process.Slideshow ( fitTo, zipValues )
 import Presentable.UI.Brick.Draw ( Name, drawUI )
-import Presentable.UI.Brick.Attributes ( bulletAttr, errorAttr, titleAttr )
+import Presentable.UI.Brick.Attributes ( bulletAttr
+                                       , errorAttr
+                                       , subtitleAttr
+                                       , titleAttr
+                                       )
 
 -- | run the Brick application
 runBrick :: AppEnv -> IO ()
@@ -59,7 +71,7 @@ app appEnv = App { appDraw = drawUI appEnv
                  , appChooseCursor = neverShowCursor
                  , appHandleEvent = handleEvent appEnv
                  , appStartEvent = appStart appEnv
-                 , appAttrMap = const attributeMap
+                 , appAttrMap = const $ attributeMap $ styles appEnv
                  }
 
 -- | Brick application start event. Gets terminal size and processes
@@ -94,18 +106,41 @@ handleEvent appEnv appState event = case event of
         appState & appStateRect .~ rect
                  & appStateSlidesBuffer .~ (makeBuffer appEnv rect)
 
--- | Compute the slideshow rectangle for some screen size
+-- | Compute the slideshow rectangle for some screen size.
 slideshowRect :: AppEnv -> (Int, Int) -> Rect
 slideshowRect AppEnv {..} (columns, rows) =
     limit maxDimensions $ Rect (columns - 2) (rows - 2)
 
--- | Brick application attribute map
-attributeMap :: AttrMap
-attributeMap = attrMap V.defAttr
-    [ (titleAttr, fg V.yellow `V.withStyle` V.bold)
-    , (bulletAttr, fg V.yellow `V.withStyle` V.bold)
-    , (errorAttr, fg V.red `V.withStyle` V.bold)
+-- | Convert applications styles to a brick application attribute map.
+attributeMap :: Styles -> AttrMap
+attributeMap Styles {..} = attrMap V.defAttr $ map (second brickAttribute)
+    [ (titleAttr, _titleStyle)
+    , (subtitleAttr, _subtitleStyle)
+    , (bulletAttr, _bulletStyle)
+    , (errorAttr, _errorStyle)
     ]
+
+-- | Convert an application style type to a brick attribute.
+brickAttribute :: Style -> Attr
+brickAttribute (Style color bold italic) =
+    foldl V.withStyle (baseAttr color) variants
+  where
+    variants = map fst $ filter snd $ [ (V.bold, bold)
+                                      , (V.italic, italic)
+                                      ]
+
+-- | Get the base attribute for a style based on the color.
+baseAttr :: Maybe Color -> Attr
+baseAttr (Just color) = fg $ case color of
+    Black   -> V.black
+    Red     -> V.red
+    Green   -> V.green
+    Yellow  -> V.yellow
+    Blue    -> V.blue
+    Magenta -> V.magenta
+    Cyan    -> V.cyan
+    White   -> V.white
+baseAttr Nothing = defAttr
 
 -- | Make a buffer of slides fitting the given rectangle.
 makeBuffer :: AppEnv -> Rect -> Either Text (Buffer (Slide, Int))

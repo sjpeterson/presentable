@@ -20,13 +20,17 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
+  - aeson
   - brick
+  - directory
+  - filepath
   - megaparsec
   - microlens
   - mtl
   - parser-combinators
   - text
   - vty
+  - yaml
   ghc-options:
     - -W
 

@@ -1,6 +1,5 @@
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
 
 module Presentable.App.State where
 
@@ -33,7 +32,7 @@ appStateRect = lens
 
 -- | Create the initial state from the environment.
 initState :: AppEnv -> AppState
-initState AppEnv {..} = AppState {..}
-  where
-    _appStateSlidesBuffer = Left "Not initialized"
-    _appStateRect = Rect 0 0
+initState _ = AppState
+    { _appStateSlidesBuffer = Left "Not initialized"
+    , _appStateRect = Rect 0 0
+    }

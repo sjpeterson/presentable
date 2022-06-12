@@ -39,7 +39,8 @@ import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
                                   , TextBlock
                                   )
 import Presentable.Process.Slideshow ( wrapRelaxedAt )
-import Presentable.UI.Brick.Attributes ( bulletAttr, errorAttr, titleAttr )
+import Presentable.UI.Brick.Attributes
+    ( bulletAttr, errorAttr, subtitleAttr, titleAttr )
 
 type Name = ()
 
@@ -67,7 +68,7 @@ drawSlide :: Int -> Slide -> Widget Name
 drawSlide _ (TitleSlide title subtitle) = case subtitle of
     Nothing -> titleWidget
     Just s  -> C.center $ vBox [ padBottom (Pad 1) titleWidget
-                               , C.hCenter $ txt s
+                               , C.hCenter $ withAttr subtitleAttr $ txt s
                                ]
   where
     titleWidget = C.hCenter $ withAttr titleAttr $ txt title
