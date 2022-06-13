@@ -17,11 +17,11 @@
     - [x] Left-aligned header
     - [x] Left-aligned bullets
       - [x] Flat
-- [ ] Resize/fit
+- [x] Resize/fit
   - [x] Fit to initial size
   - [x] Split bullet list slides to fit
   - [x] Show error if unable to fit
-  - [ ] Stay in same position
+  - [x] Stay in same position
 - [x] Navigation
   - [x] Press escape to exit
   - [x] Press h, right arrow or Enter to advance
@@ -31,6 +31,7 @@
   - [x] max dimensions
   - [x] title style
   - [x] subtitle style
+  - [ ] slide title style
   - [x] bullet style
   - [x] error style
 - [x] Options

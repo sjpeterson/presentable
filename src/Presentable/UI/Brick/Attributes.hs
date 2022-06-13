@@ -5,8 +5,10 @@ module Presentable.UI.Brick.Attributes where
 import Brick ( AttrName )
 
 -- | Brick attribute name.
-titleAttr, subtitleAttr, bulletAttr, errorAttr :: AttrName
-titleAttr = "titleAttr"
-subtitleAttr = "subtitleAttr"
+bulletAttr, copyrightAttr, errorAttr, slideTitleAttr, subtitleAttr, titleAttr :: AttrName
 bulletAttr = "bulletAttr"
+copyrightAttr = "copyrightAttr"
 errorAttr = "errorAttr"
+slideTitleAttr = "slideTitleAttr"
+subtitleAttr = "subtitleAttr"
+titleAttr = "titleAttr"

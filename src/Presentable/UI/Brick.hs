@@ -45,12 +45,21 @@ import Presentable.Data.Buffer ( Buffer ( Buffer ), forwardUntil, next, prev )
 import Presentable.Data.Config
     ( Color ( Black, Red, Green, Yellow, Blue, Magenta, Cyan, White )
     , Style ( Style )
-    , Styles ( Styles, _titleStyle, _subtitleStyle, _errorStyle, _bulletStyle )
+    , Styles ( Styles
+             , _bulletStyle
+             , _copyrightStyle
+             , _errorStyle
+             , _slideTitleStyle
+             , _subtitleStyle
+             , _titleStyle
+             )
     )
 import Presentable.Data.Geometry ( Rect ( Rect ), limit )
 import Presentable.UI.Brick.Draw ( Name, drawUI )
 import Presentable.UI.Brick.Attributes ( bulletAttr
+                                       , copyrightAttr
                                        , errorAttr
+                                       , slideTitleAttr
                                        , subtitleAttr
                                        , titleAttr
                                        )
@@ -119,10 +128,12 @@ slideshowRect AppEnv {..} (columns, rows) =
 -- | Convert applications styles to a brick application attribute map.
 attributeMap :: Styles -> AttrMap
 attributeMap Styles {..} = attrMap V.defAttr $ map (second brickAttribute)
-    [ (titleAttr, _titleStyle)
-    , (subtitleAttr, _subtitleStyle)
-    , (bulletAttr, _bulletStyle)
+    [ (bulletAttr, _bulletStyle)
+    , (copyrightAttr, _copyrightStyle)
     , (errorAttr, _errorStyle)
+    , (slideTitleAttr, _slideTitleStyle)
+    , (subtitleAttr, _subtitleStyle)
+    , (titleAttr, _titleStyle)
     ]
 
 -- | Convert an application style type to a brick attribute.

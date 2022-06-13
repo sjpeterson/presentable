@@ -11,7 +11,14 @@ import System.FilePath ( combine )
 
 import Presentable.Data.Config
     ( Config ( Config )
-    , Styles ( Styles, _bulletStyle, _errorStyle, _subtitleStyle, _titleStyle )
+    , Styles ( Styles
+             , _bulletStyle
+             , _copyrightStyle
+             , _errorStyle
+             , _slideTitleStyle
+             , _subtitleStyle
+             , _titleStyle
+             )
     , Style ( Style )
     , overloadedWith
     )
@@ -29,10 +36,12 @@ defaultConfig = Config maxDimensions defaultStyles
 -- | Default styles.
 defaultStyles :: Styles
 defaultStyles = Styles
-    { _bulletStyle   = defaultStyle
-    , _errorStyle    = defaultStyle
-    , _subtitleStyle = defaultStyle
-    , _titleStyle    = defaultStyle
+    { _bulletStyle     = defaultStyle
+    , _copyrightStyle  = defaultStyle
+    , _errorStyle      = defaultStyle
+    , _slideTitleStyle = defaultStyle
+    , _subtitleStyle   = defaultStyle
+    , _titleStyle      = defaultStyle
     }
   where
     defaultStyle = Style Nothing False False

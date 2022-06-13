@@ -40,7 +40,13 @@ import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
                                   )
 import Presentable.Process.Slideshow ( wrapRelaxedAt )
 import Presentable.UI.Brick.Attributes
-    ( bulletAttr, errorAttr, subtitleAttr, titleAttr )
+    ( bulletAttr
+    , copyrightAttr
+    , errorAttr
+    , slideTitleAttr
+    , subtitleAttr
+    , titleAttr
+    )
 
 type Name = ()
 
@@ -57,7 +63,8 @@ drawUI appEnv appState =
     Rect columns rows = appState ^. appStateRect
     copyrightNotice = case (slideshowCopyright $ slideshow appEnv) of
         Nothing        -> emptyWidget
-        Just copyright -> padLeft Max $ str $ show copyright
+        Just copyright ->
+            padLeft Max $ withAttr copyrightAttr $ str $ show copyright
 
 -- | Draw an error.
 drawError :: Text -> Widget Name
@@ -73,7 +80,7 @@ drawSlide _ (TitleSlide title subtitle) = case subtitle of
   where
     titleWidget = C.hCenter $ withAttr titleAttr $ txt title
 drawSlide columns (SingleContentSlide title content) = padBottom Max $
-    vBox [ padBottom (Pad 1) $ withAttr titleAttr $ txt title
+    vBox [ padBottom (Pad 1) $ withAttr slideTitleAttr $ txt title
          , drawContent columns content
          ]
 

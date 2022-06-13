@@ -49,10 +49,12 @@ makeLenses ''Style
 
 -- | Complete styles data type.
 data Styles = Styles
-    { _titleStyle :: Style
-    , _subtitleStyle :: Style
+    { _bulletStyle :: Style
+    , _copyrightStyle :: Style
     , _errorStyle :: Style
-    , _bulletStyle :: Style
+    , _slideTitleStyle :: Style
+    , _subtitleStyle :: Style
+    , _titleStyle :: Style
     } deriving ( Eq, Show )
 
 makeLenses ''Styles
@@ -84,10 +86,12 @@ $(deriveFromJSON (stripPrefix 12) ''PartialStyle)
 
 -- | Config file styles type.
 data PartialStyles = PartialStyles
-    { partialStylesTitle :: Maybe PartialStyle
-    , partialStylesSubtitle :: Maybe PartialStyle
+    { partialStylesBullet :: Maybe PartialStyle
+    , partialStylesCopyright :: Maybe PartialStyle
     , partialStylesError :: Maybe PartialStyle
-    , partialStylesBullet :: Maybe PartialStyle
+    , partialStylesSlideTitle :: Maybe PartialStyle
+    , partialStylesSubtitle :: Maybe PartialStyle
+    , partialStylesTitle :: Maybe PartialStyle
     } deriving ( Eq, Show )
 
 $(deriveFromJSON (stripPrefix 13) ''PartialStyles)
@@ -119,7 +123,9 @@ overloadedWith baseConfig PartialConfig {..} =
         Nothing -> id
         Just PartialStyles {..} -> \s ->
             s & bulletStyle %~ overloadWith partialStylesBullet
+              & copyrightStyle %~ overloadWith partialStylesCopyright
               & errorStyle %~ overloadWith partialStylesError
+              & slideTitleStyle %~ overloadWith partialStylesSlideTitle
               & subtitleStyle %~ overloadWith partialStylesSubtitle
               & titleStyle %~ overloadWith partialStylesTitle
 
