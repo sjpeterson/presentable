@@ -12,7 +12,7 @@ Presentations are written in markdown with a few specific annotations.
 
     # Presentable
 
-    Minimalistic slideshows from markdown
+    Minimalist slideshows from readable markdown
 
     ## Bullet list
     
@@ -20,8 +20,8 @@ Presentations are written in markdown with a few specific annotations.
     - Second item
     - Third item
 
-You run the slideshow in your terminal by calling Presentable with the path to
-the markdown file:
+You run the slideshow in your terminal by simply calling Presentable with the
+path to the markdown file:
 
     presentable example/simple.md
 

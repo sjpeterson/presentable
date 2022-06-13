@@ -29,7 +29,6 @@ library
   exposed-modules:
       Presentable
       Presentable.App.Env
-      Presentable.App.Monad
       Presentable.App.State
       Presentable.Config
       Presentable.Data.AesonOptions
@@ -56,6 +55,7 @@ library
     , filepath
     , megaparsec
     , microlens
+    , microlens-th
     , mtl
     , parser-combinators
     , text

@@ -1,13 +1,13 @@
-{-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Presentable.App.State where
 
 import Data.Maybe ( isJust )
 import Data.Text ( Text )
 
-import Lens.Micro ( Lens', lens )
+import Lens.Micro.TH ( makeLenses )
 
 import Presentable.App.Env ( AppEnv ( AppEnv, slideshow ) )
 import Presentable.Data.Buffer ( Buffer, bufferOf )
@@ -15,24 +15,19 @@ import Presentable.Data.Geometry ( Rect ( Rect ) )
 import Presentable.Data.Slideshow ( Slide, slideshowSlides, slideshowCopyright )
 import Presentable.Process.Slideshow ( fitTo, zipValues )
 
--- | Application state type.
+-- | Type alias for the slides buffer. The slides buffer is a buffer of slides
+-- and their positional value (used to remain in place when re-fitting the
+-- the slideshow to a new window size).
+type SlidesBuffer = Buffer (Slide, Int)
+
+-- | Application state type. Holds all data required to draw the UI.
 data AppState = AppState
     { _appStatePosition :: Int
-    , _appStateSlidesBuffer :: Either Text (Buffer (Slide,  Int))
+    , _appStateSlidesBuffer :: Either Text SlidesBuffer
     , _appStateRect :: Rect
     } deriving ( Eq, Show )
 
--- | A lens for the slides buffer.
-appStateSlidesBuffer :: Lens' AppState (Either Text (Buffer (Slide, Int)))
-appStateSlidesBuffer = lens
-    _appStateSlidesBuffer
-    (\appState b -> appState { _appStateSlidesBuffer = b })
-
--- | A lens for the slideshow rectangle.
-appStateRect :: Lens' AppState Rect
-appStateRect = lens
-    _appStateRect
-    (\appState c -> appState { _appStateRect = c })
+makeLenses ''AppState
 
 -- | Create the initial state from the environment.
 initState :: AppEnv -> AppState

@@ -30,17 +30,18 @@ import Brick
     )
 import qualified Graphics.Vty as V
 import Graphics.Vty.Attributes ( Attr, defAttr )
-import Lens.Micro ( (&), (.~), over )
+import Lens.Micro ( (&), (.~), (^.) )
 
 import Presentable.App.Env
     ( AppEnv ( AppEnv, maxDimensions, slideshow, styles ) )
 import Presentable.App.State ( AppState
+                             , appStatePosition
                              , appStateRect
                              , appStateSlidesBuffer
                              , initState
                              , makeBuffer
                              )
-import Presentable.Data.Buffer ( next, prev )
+import Presentable.Data.Buffer ( Buffer ( Buffer ), forwardUntil, next, prev )
 import Presentable.Data.Config
     ( Color ( Black, Red, Green, Yellow, Blue, Magenta, Cyan, White )
     , Style ( Style )
@@ -73,7 +74,8 @@ appStart :: AppEnv -> AppState -> EventM Name AppState
 appStart appEnv appState = do
     vtyOutput <- V.outputIface <$> getVtyHandle
     rect <- liftIO (slideshowRect appEnv <$> V.displayBounds vtyOutput)
-    return $ appState & appStateRect .~ rect
+    return $ appState & appStatePosition .~ 0
+                      & appStateRect .~ rect
                       & appStateSlidesBuffer .~ (makeBuffer appEnv rect)
 
 -- | Brick application event handler.
@@ -93,11 +95,21 @@ handleEvent appEnv appState event = case event of
         fitSlides (slideshowRect appEnv (columns, rows))
     _                                    -> continue appState
   where
-    nextSlide = over appStateSlidesBuffer (fmap next) appState
-    prevSlide = over appStateSlidesBuffer (fmap prev) appState
+    nextSlide = moveBy next
+    prevSlide = moveBy prev
+    moveBy f = case appState ^. appStateSlidesBuffer of
+        Left _       -> appState
+        Right buffer ->
+            let newBuffer@(Buffer (_, position) _ _) = f buffer
+            in appState & appStatePosition .~ position
+                        & appStateSlidesBuffer .~ Right newBuffer
+
     fitSlides rect =
-        appState & appStateRect .~ rect
-                 & appStateSlidesBuffer .~ (makeBuffer appEnv rect)
+        let position = appState ^. appStatePosition
+            atPosition = (> position) . snd
+            newBuffer = fmap (forwardUntil atPosition) (makeBuffer appEnv rect)
+        in appState & appStateRect .~ rect
+                    & appStateSlidesBuffer .~ newBuffer
 
 -- | Compute the slideshow rectangle for some screen size.
 slideshowRect :: AppEnv -> (Int, Int) -> Rect

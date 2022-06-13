@@ -26,6 +26,7 @@ library:
   - filepath
   - megaparsec
   - microlens
+  - microlens-th
   - mtl
   - parser-combinators
   - text
