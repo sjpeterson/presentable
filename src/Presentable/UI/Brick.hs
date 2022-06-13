@@ -55,7 +55,7 @@ import Presentable.UI.Brick.Attributes ( bulletAttr
                                        , titleAttr
                                        )
 
--- | run the Brick application
+-- | run the Brick application.
 runBrick :: AppEnv -> IO ()
 runBrick appEnv = defaultMain (app appEnv) (initState appEnv) >> return ()
 

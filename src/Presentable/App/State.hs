@@ -29,7 +29,8 @@ data AppState = AppState
 
 makeLenses ''AppState
 
--- | Create the initial state from the environment.
+-- | Create the initial state from the environment. The slides buffer cannot be
+-- initialized because the terminal size is not yet known.
 initState :: AppEnv -> AppState
 initState _ = AppState
     { _appStatePosition = 0
@@ -37,8 +38,9 @@ initState _ = AppState
     , _appStateRect = Rect 0 0
     }
 
--- | Make a buffer of slides fitting the given rectangle.
-makeBuffer :: AppEnv -> Rect -> Either Text (Buffer (Slide, Int))
+-- | Create a buffer of slides fitting the given rectangle from the environment
+-- slideshow.
+makeBuffer :: AppEnv -> Rect -> Either Text SlidesBuffer
 makeBuffer AppEnv {..} rect = fmap (bufferOf . zipValues) $
     fitTo rect footerHeight $ slideshowSlides $ slideshow
   where
