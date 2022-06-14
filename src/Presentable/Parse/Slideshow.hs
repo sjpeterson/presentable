@@ -65,6 +65,7 @@ slideshowParser = do
     subtitle <- optional $ try solitaryLineParser
     let titleSlide = TitleSlide title subtitle
     slides <- many slideParser
+    _ <- eof
     return $ Slideshow copyright (titleSlide :| slides)
 
 -- | Parser for a level 1 markdown heading.
@@ -123,12 +124,13 @@ slideContentParser = try bulletListParser <|> noContentParser
 
 -- | Parser for a bullet list.
 bulletListParser :: Parser SlideContent
-bulletListParser = emptyLine >> BulletList <$> NE.some bulletListItemParser
+bulletListParser = emptyLine >> BulletList <$>
+    choice (map (NE.some . bulletListItemParser) ['-', '*', '+'])
 
 -- | Parser for an item in a bullet list.
-bulletListItemParser :: Parser TextBlock
-bulletListItemParser =
-    plainTextBlock <$> between (string "- ") (optional eol) (continuedLine 2)
+bulletListItemParser :: Char -> Parser TextBlock
+bulletListItemParser bulletChar = plainTextBlock <$>
+    between (string (T.cons bulletChar " ")) (optional eol) (continuedLine 2)
 
 -- | Parser for the content of an empty slide.
 noContentParser :: Parser SlideContent

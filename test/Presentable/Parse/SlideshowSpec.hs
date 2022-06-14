@@ -82,6 +82,9 @@ spec = do
         it "parses a bullet list slide" $ do
             parseSlideshow' testSlideshowBulletListSlide `shouldBe`
                 Right expectedSlideshowBulletListSlide
+        it "does not accept mixing bullet characters in a list" $ do
+            parseSlideshow' testSlideshowInvalidBulletListSlide `shouldSatisfy`
+                isLeft
         it "parses multiple empty slides" $ do
             parseSlideshow' testSlideshowTwoEmptySlides `shouldBe`
                 Right expectedSlideshowTwoEmptySlides
@@ -177,7 +180,7 @@ spec = do
             ]
 
     testSlideshowTwoBulletListSlides =
-        "# Slideshow Title\n\n## Slide Title\n\n- First item\n- Second item\n\n## Second Slide Title\n\n- 1st item\n- 2nd item"
+        "# Slideshow Title\n\n## Slide Title\n\n+ First item\n+ Second item\n\n## Second Slide Title\n\n* 1st item\n* 2nd item"
     expectedSlideshowTwoBulletListSlides =
         Slideshow
             Nothing
@@ -222,6 +225,9 @@ spec = do
                               ])
             , SingleContentSlide "Second Empty Slide" NoContent
             ]
+
+    testSlideshowInvalidBulletListSlide =
+        "# Slideshow Title\n\n## Slide Title\n\n- First item\n* Second item"
 
     trailingNewline = flip T.append "\n"
     trailingWhitespace = flip T.append "    "
