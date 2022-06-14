@@ -1,29 +1,39 @@
 name:                presentable
-version:             0.1.0.0
+version:             0.1.0
 github:              "sjpeterson/presentable"
 license:             MIT
 author:              "Stefan Peterson"
 maintainer:          "stefan.j.peterson@gmail.com"
 copyright:           "2022 Stefan Peterson"
+synopsis:            A program for running minimalist presentations in the terminal
+category:            Presentation
+description:         Please see the README on GitHub at <https://github.com/sjpeterson/presentable#readme>
 
 extra-source-files:
 - README.md
 - ChangeLog.md
 
-# Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Web
-
-# To avoid duplicated efforts in documentation and dealing with the
-# complications of embedding Haddock markup inside cabal files, it is
-# common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/sjpeterson/presentable#readme>
 
 dependencies:
 - base >= 4.7 && < 5
 
 library:
   source-dirs: src
+  dependencies:
+  - aeson
+  - brick
+  - directory
+  - filepath
+  - megaparsec
+  - microlens
+  - microlens-th
+  - mtl
+  - parser-combinators
+  - text
+  - vty
+  - yaml
+  ghc-options:
+    - -W
 
 executables:
   presentable:
@@ -33,7 +43,9 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -W
     dependencies:
+    - optparse-applicative
     - presentable
 
 tests:
@@ -45,4 +57,6 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - hspec
     - presentable
+    - text

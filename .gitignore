@@ -1,2 +1,6 @@
 .stack-work/
 *~
+
+# IDE stuff
+.idea/
+presentable.iml
