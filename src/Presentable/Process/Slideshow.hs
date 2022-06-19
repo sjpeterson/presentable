@@ -12,7 +12,6 @@ import Data.Maybe ( fromMaybe )
 
 import Presentable.Data.Block ( Block ( wrappedHeightAt ) )
 import Presentable.Data.Geometry ( Rect ( Rect, rectColumns, rectRows )
-                                 , hShrink
                                  , vShrink
                                  )
 import Presentable.Data.Slideshow
@@ -55,7 +54,7 @@ fitContentTo :: Rect
              -> Either WrappingError (NonEmpty SlideContent)
 fitContentTo _ NoContent = Right [NoContent]
 fitContentTo rect (BulletListContent (BulletList items)) =
-    fmap (BulletListContent . BulletList) <$> vSplit (hShrink rect 2) items
+    fmap (BulletListContent . BulletList) <$> vSplit rect items
 
 -- | Vertically split a non-empty list of text blocks to fit the given
 -- dimensions.

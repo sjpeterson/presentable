@@ -39,12 +39,12 @@
 ## 0.2.0 - Nested bullet lists
 - [ ] Parse markdown
   - [ ] Nested bullet list (Markdown bullet list following a heading 2)
-- [ ] Parse markdown
+- [ ] Present
   - [ ] Bullet list slide
     - [ ] Left-aligned bullets
       - [ ] Nested
-- [ ] Resize/fit
-  - [ ] Split only on top-level items
+- [x] Resize/fit
+  - [x] Split only on top-level items
 
 ## 0.3.0 - Plain text slides
 - [ ] Parse markdown
@@ -58,6 +58,10 @@
 
 ## Not yet prioritized
 
+- [ ] Inline formatting (bold, italic)
+  - [ ] Full words
+  - [ ] Part of word
+- [ ] Ordered lists
 - [ ] Tables
 - [ ] Code examples
 - [ ] Runnable code examples

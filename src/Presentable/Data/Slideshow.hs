@@ -48,7 +48,7 @@ instance Block BulletListItem where
             Just sublist' -> foldl f (Right 0) (unBulletList sublist')
         f err@(Left _) _           = err
         f (Right n)    sublistItem = fmap (n +) $
-                                         wrappedHeightAt (c - 4) sublistItem
+                                         wrappedHeightAt (c - 2) sublistItem
 
 -- | Copyright information.
 data Copyright = Copyright

@@ -9,6 +9,15 @@ import Presentable.Data.Slideshow ( BulletList ( BulletList )
 import Presentable.Data.TextBlock ( plainTextBlock )
 
 flatBulletList :: NonEmpty Text -> SlideContent
-flatBulletList = BulletListContent . BulletList . fmap listItem
+flatBulletList = BulletListContent . flatBulletList'
+
+nestedBulletList :: NonEmpty (Text , Maybe (NonEmpty Text)) -> SlideContent
+nestedBulletList = BulletListContent . BulletList . fmap listItem
+  where
+    listItem (itemText, sublist) =
+        BulletListItem (plainTextBlock itemText) (fmap flatBulletList' sublist)
+
+flatBulletList' :: NonEmpty Text -> BulletList
+flatBulletList' = BulletList . fmap listItem
   where
     listItem = (flip BulletListItem) Nothing . plainTextBlock

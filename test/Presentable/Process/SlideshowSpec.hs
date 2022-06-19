@@ -15,8 +15,7 @@ import Presentable.Data.Slideshow ( Slide ( SingleContentSlide, TitleSlide )
 import Presentable.Data.TextBlock ( TextBlock ( TextBlock ) , plainTextBlock )
 import Presentable.Process.Slideshow ( fitTo, zipValues )
 
-import Presentable.TestUtils ( flatBulletList )
-
+import Presentable.TestUtils ( flatBulletList, nestedBulletList )
 
 spec :: Spec
 spec = do
@@ -33,14 +32,14 @@ spec = do
                            ]
     describe "fitTo" $ do
         it "leaves a small enough title slide intact" $ do
-            fitTo (Rect 14 4) 0 [testTitleSlide] `shouldBe`
+            fitTo (Rect 12 4) 0 [testTitleSlide] `shouldBe`
                 Right [testTitleSlide]
         it "fails if a title slide is too large" $ do
-            fitTo (Rect 14 3) 0 [testTitleSlide] `shouldSatisfy` isLeft
+            fitTo (Rect 12 3) 0 [testTitleSlide] `shouldSatisfy` isLeft
         it "deducts footer height on both sides of a title slide" $ do
-            fitTo (Rect 14 7) 2 [testTitleSlide] `shouldSatisfy` isLeft
+            fitTo (Rect 12 7) 2 [testTitleSlide] `shouldSatisfy` isLeft
         it "splits a long bullet list leaving items intact" $ do
-            fitTo (Rect 14 7) 0 [testBulletListSlide] `shouldBe`
+            fitTo (Rect 12 7) 0 [testBulletListSlide] `shouldBe`
                 Right [ SingleContentSlide
                             "Slide Title"
                             (flatBulletList [ "First item"
@@ -54,7 +53,7 @@ spec = do
                                             ])
                       ]
         it "deducts footer height at one end of a bullet list slide" $ do
-            fitTo (Rect 14 9) 2 [testBulletListSlide] `shouldBe`
+            fitTo (Rect 12 9) 2 [testBulletListSlide] `shouldBe`
                 Right [ SingleContentSlide
                             "Slide Title"
                             (flatBulletList [ "First item"
@@ -68,11 +67,29 @@ spec = do
                                             ])
                       ]
         it "fails if a bullet list item is too large to fit" $ do
-            fitTo (Rect 14 7) 0 [testLongItemBulletListSlide] `shouldSatisfy`
+            fitTo (Rect 12 7) 0 [testLongItemBulletListSlide] `shouldSatisfy`
                 isLeft
         it "fails if the first bullet list item is too large to fit" $ do
-            fitTo (Rect 14 7) 0 [testLongFirstItemBulletListSlide]
+            fitTo (Rect 12 7) 0 [testLongFirstItemBulletListSlide]
                 `shouldSatisfy` isLeft
+        it "splits bullet lists on top-level items only" $ do
+            fitTo (Rect 12 8) 0 [testNestedBulletListSlide] `shouldBe`
+                Right [ SingleContentSlide
+                            "Slide Title"
+                            (flatBulletList ["First item", "Second item"])
+                      , SingleContentSlide
+                            "Slide Title"
+                            (nestedBulletList
+                                 [ ("Third item", Just ["A", "B", "C"])
+                                 , ("Fourth item", Nothing)
+                                 ])
+                      , SingleContentSlide
+                          "Slide Title"
+                          (flatBulletList ["Fifth item"])
+                      ]
+        it "fails if a sublist has too many items to fit" $ do
+            fitTo (Rect 12 5) 0 [testNestedBulletListSlide] `shouldSatisfy`
+                isLeft
   where
     testTitleSlide = TitleSlide "Presentation" (Just "With a subtitle")
     testBulletListSlide = SingleContentSlide
@@ -83,6 +100,14 @@ spec = do
                         , "Fourth item"
                         , "Fifth item"
                         ])
+    testNestedBulletListSlide = SingleContentSlide
+        "Slide Title"
+        (nestedBulletList [ ("First item", Nothing)
+                          , ("Second item", Nothing)
+                          , ("Third item", Just ["A", "B", "C"])
+                          , ("Fourth item", Nothing)
+                          , ("Fifth item", Nothing)
+                          ])
     testLongItemBulletListSlide = SingleContentSlide
         "Slide Title"
         (flatBulletList [ "First item"
