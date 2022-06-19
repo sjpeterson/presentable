@@ -2,8 +2,12 @@
 
 module Presentable.Data.Slideshow where
 
-import Data.List.NonEmpty ( NonEmpty ( (:|) ) )
+import Control.Monad ( liftM2 )
+import Data.List.NonEmpty ( NonEmpty )
 import Data.Text ( Text, unpack )
+
+import Presentable.Data.Block ( Block ( wrappedHeightAt ) )
+import Presentable.Data.TextBlock ( TextBlock )
 
 -- | A type alias for the slideshow title.
 type Title = Text
@@ -21,9 +25,30 @@ data Slide = TitleSlide Title (Maybe Text)
     deriving (Eq, Show)
 
 -- | Slide content data type.
-data SlideContent = BulletList (NonEmpty TextBlock)
+data SlideContent = BulletListContent BulletList
                   | NoContent
     deriving (Eq, Show)
+
+-- | Bullet list data type. A newtype for a non-empty list of bullet list items.
+newtype BulletList = BulletList
+    { unBulletList :: NonEmpty BulletListItem
+    } deriving (Eq, Show)
+
+-- | Bullet list item type. Consists of an item text and an optional sublist.
+data BulletListItem = BulletListItem TextBlock (Maybe BulletList)
+    deriving (Eq, Show)
+
+instance Block BulletListItem where
+    wrappedHeightAt c (BulletListItem itemText sublist) = liftM2 (+)
+        (wrappedHeightAt (c - 2) itemText)
+        (sublistHeight)
+      where
+        sublistHeight = case sublist of
+            Nothing       -> Right 0
+            Just sublist' -> foldl f (Right 0) (unBulletList sublist')
+        f err@(Left _) _           = err
+        f (Right n)    sublistItem = fmap (n +) $
+                                         wrappedHeightAt (c - 4) sublistItem
 
 -- | Copyright information.
 data Copyright = Copyright
@@ -44,19 +69,3 @@ data CopyrightYear = SingleYear Int
                    | YearRange Int Int
                         deriving (Eq, Show)
 
--- | A newtype for blocks of text that must not be split. A non-empty list of
--- tagged inline text parts.
-newtype TextBlock = TextBlock
-    { unTextBlock :: NonEmpty TaggedText
-    } deriving (Eq, Show)
-
--- | A type alias for some inline text and a tag describing its type.
-type TaggedText = (Text, InlineTextTag)
-
--- | The different types of inline text.
-data InlineTextTag = PlainText
-    deriving (Eq, Show)
-
--- | Create a TextBlock from some Text.
-plainTextBlock :: Text -> TextBlock
-plainTextBlock = TextBlock . (:| []) . (flip (,) PlainText)

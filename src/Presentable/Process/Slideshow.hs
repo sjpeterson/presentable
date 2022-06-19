@@ -2,36 +2,28 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
-module Presentable.Process.Slideshow
-    ( fitTo
-    , wrapAt
-    , wrapRelaxedAt
-    , zipValues
-    ) where
+module Presentable.Process.Slideshow ( fitTo , zipValues ) where
 
 import Control.Applicative ( liftA2 )
 import Data.Foldable ( foldr' )
 import Data.List.NonEmpty ( NonEmpty ( (:|) ), (<|) )
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe ( fromMaybe )
-import Data.Text ( Text )
-import qualified Data.Text as T
 
+import Presentable.Data.Block ( Block ( wrappedHeightAt ) )
 import Presentable.Data.Geometry ( Rect ( Rect, rectColumns, rectRows )
                                  , hShrink
                                  , vShrink
                                  )
 import Presentable.Data.Slideshow
-    ( InlineTextTag ( PlainText )
+    ( BulletList ( BulletList )
     , Slide ( SingleContentSlide , TitleSlide )
-    , SlideContent ( BulletList, NoContent )
-    , TaggedText
-    , TextBlock ( unTextBlock )
-    , plainTextBlock
+    , SlideContent ( BulletListContent, NoContent )
     )
+import Presentable.Data.TextBlock ( plainTextBlock )
+import Presentable.Data.Wrappable ( WrappingError )
 import Presentable.Traversals ( mapExpandM, splitWhen )
 
-type WrappingError = Text
 
 -- | Fit a non-empty list of slides to the given dimensions.
 fitTo :: Rect -> Int -> NonEmpty Slide -> Either WrappingError (NonEmpty Slide)
@@ -61,77 +53,21 @@ fitOneTo rect@(Rect {..}) footerHeight slide = case slide of
 fitContentTo :: Rect
              -> SlideContent
              -> Either WrappingError (NonEmpty SlideContent)
-fitContentTo _         NoContent          = Right [NoContent]
-fitContentTo rect (BulletList items) = fmap BulletList <$>
-    vSplit (hShrink rect 2) items
+fitContentTo _ NoContent = Right [NoContent]
+fitContentTo rect (BulletListContent (BulletList items)) =
+    fmap (BulletListContent . BulletList) <$> vSplit (hShrink rect 2) items
 
 -- | Vertically split a non-empty list of text blocks to fit the given
 -- dimensions.
-vSplit :: Rect
-       -> NonEmpty TextBlock
-       -> Either WrappingError (NonEmpty (NonEmpty TextBlock))
+vSplit :: Block a
+       => Rect
+       -> NonEmpty a
+       -> Either WrappingError (NonEmpty (NonEmpty a))
 vSplit Rect {..} = splitWhen
     (wrappedHeightAt rectColumns)
     (> rectRows)
     (+)
     (const "A text block is too large to fit")
-
--- | Compute the height of a text block wrapped at the given number of columns.
-wrappedHeightAt :: Int -> TextBlock -> Either WrappingError Int
-wrappedHeightAt = fmap (fmap NE.length) . wrapAt
-
--- | Wrap a text block to the given number of columns. Results in an error if
--- some word is longer than the allowed width.
-wrapAt :: Int
-       -> TextBlock
-       -> Either WrappingError (NonEmpty (NonEmpty TaggedText))
-wrapAt c = fmap (fmap unparticles) . wrapParticlesAt c . particles . unTextBlock
-
--- | Wrap particles of a text block to the given number of columns.
-wrapParticlesAt :: Int
-                -> NonEmpty TaggedText
-                -> Either WrappingError (NonEmpty (NonEmpty TaggedText))
-wrapParticlesAt c = splitWhen (Right . T.length . fst) (> c) ((+) . (1 +)) fail
-  where
-    fail p = T.concat ["Particle '", fst p, "' is too long to fit"]
-
--- | Wrap a text block to the given number of columns.
-wrapRelaxedAt :: Int -> TextBlock -> [NonEmpty TaggedText]
-wrapRelaxedAt c =
-    map unparticles . wrapParticlesRelaxedAt c . particles . unTextBlock
-
--- | Wrap particles of a text block to the given number of columns.
-wrapParticlesRelaxedAt :: Int -> NonEmpty TaggedText -> [NonEmpty TaggedText]
-wrapParticlesRelaxedAt c (p :| ps) = reverse . map (NE.reverse . fst) $
-    foldr' f initial (reverse ps)
-  where
-    initial = [(p :| [], T.length $ fst p)]
-    f t acc = case acc of
-        []                         -> [newRow]
-        current@(particles, n):ps' ->
-            let newLength = n + 1 + pLength
-            in if newLength > c
-                then newRow:current:ps'
-                else (t<|particles, newLength):ps'
-      where
-        newRow = (t:|[], pLength)
-        pLength = T.length $ fst t
-
--- | Split a non-empty list of tagged inline text parts into particles.
-particles :: NonEmpty TaggedText -> NonEmpty TaggedText
-particles ((s, PlainText) :| ts) = case ts of
-    (x:xs) -> headParticles <> particles (x:|xs)
-    _      -> headParticles
-  where
-    headParticles = case map (flip (,) PlainText) (T.words s) of
-        (w:ws) -> w :| ws
-        _      -> (s, PlainText) :| []
-
--- | Join particles where allowed by their tags.
-unparticles :: NonEmpty TaggedText -> NonEmpty TaggedText
-unparticles ps@(_ :| []) = ps
-unparticles ((s1, PlainText) :| ((s2, PlainText):ps)) =
-    unparticles $ (T.unwords [s1, s2], PlainText) :| ps
 
 -- | Pair each slide with their positional value.
 zipValues :: NonEmpty Slide -> NonEmpty (Slide, Int)
@@ -149,6 +85,6 @@ slideValue (SingleContentSlide _ slideContent) = slideContentValue slideContent
 -- | Compute the value of some slide content. The value is used to track current
 -- position in slideshow.
 slideContentValue :: SlideContent -> Int
-slideContentValue (BulletList items) = NE.length items
+slideContentValue (BulletListContent (BulletList items)) = NE.length items
 slideContentValue NoContent          = 1
 

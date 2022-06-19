@@ -31,14 +31,18 @@ import Presentable.App.State ( AppState
                              )
 import Presentable.Data.Buffer ( bufferCurrent )
 import Presentable.Data.Geometry ( Rect ( Rect ) )
-import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
-                                  , Slide ( SingleContentSlide , TitleSlide )
-                                  , SlideContent ( BulletList, NoContent )
-                                  , Slideshow ( slideshowCopyright )
+import Presentable.Data.Slideshow
+    ( BulletList ( BulletList )
+    , BulletListItem ( BulletListItem )
+    , Slide ( SingleContentSlide , TitleSlide )
+    , SlideContent ( BulletListContent, NoContent )
+    , Slideshow ( slideshowCopyright )
+    )
+import Presentable.Data.TextBlock ( InlineTextTag ( PlainText )
                                   , TaggedText
-                                  , TextBlock
+                                  , TextBlock ( unTextBlock )
                                   )
-import Presentable.Process.Slideshow ( wrapRelaxedAt )
+import Presentable.Data.Wrappable ( wrapRelaxedAt )
 import Presentable.UI.Brick.Attributes
     ( bulletAttr
     , copyrightAttr
@@ -87,17 +91,17 @@ drawSlide columns (SingleContentSlide title content) = padBottom Max $
 -- | Draw slide contents to the given width.
 drawContent :: Int -> SlideContent -> Widget Name
 drawContent _       NoContent          = emptyWidget
-drawContent columns (BulletList items) = padRight Max $
+drawContent columns (BulletListContent (BulletList items)) = padRight Max $
     vBox $ map (drawBulletListItem columns) (NE.toList items)
 
 -- | Draw a bullet list item to the given width.
-drawBulletListItem :: Int -> TextBlock -> Widget Name
-drawBulletListItem columns tb =
+drawBulletListItem :: Int -> BulletListItem -> Widget Name
+drawBulletListItem columns (BulletListItem tb _) =
     withAttr bulletAttr (txt "• ") <+> drawTextBlock (columns - 2) tb
 
 -- | Draw a text block wrapped at the specified width.
 drawTextBlock :: Int -> TextBlock -> Widget Name
-drawTextBlock columns tb = vBox $ map drawLine $ wrapRelaxedAt columns tb
+drawTextBlock columns tb = vBox $ map (drawLine . unTextBlock) $ NE.toList $ wrapRelaxedAt columns tb
 
 -- | Draw a single line of text.
 drawLine :: NonEmpty TaggedText -> Widget Name

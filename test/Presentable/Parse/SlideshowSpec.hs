@@ -4,17 +4,23 @@
 module Presentable.Parse.SlideshowSpec where
 
 import Data.Either ( isLeft )
+import Data.List.NonEmpty ( NonEmpty )
+import Data.Text ( Text )
 import qualified Data.Text as T
 import Test.Hspec ( Spec, describe, it, shouldBe, shouldSatisfy )
 
-import Presentable.Data.Slideshow ( Copyright (..)
+import Presentable.Data.Slideshow ( BulletList (..)
+                                  , BulletListItem (..)
+                                  , Copyright (..)
                                   , CopyrightYear (..)
                                   , Slideshow (..)
                                   , Slide (..)
                                   , SlideContent (..)
-                                  , plainTextBlock
                                   )
+import Presentable.Data.TextBlock ( plainTextBlock )
 import Presentable.Parse.Slideshow ( parseSlideshow, parseSlide )
+
+import Presentable.TestUtils ( flatBulletList )
 
 spec :: Spec
 spec = do
@@ -26,16 +32,12 @@ spec = do
             parseSlide "" "\n## Slide Title\n\n- First item\n- Second item"
                 `shouldBe` Right (SingleContentSlide
                     "Slide Title"
-                    (BulletList [ plainTextBlock "First item"
-                                , plainTextBlock "Second item"
-                                ]))
+                    (flatBulletList ["First item", "Second item"]))
         it "unwraps line continuation in bullet list slides" $ do
             parseSlide "" "\n## Slide Title\n\n- First item\n- Second\n  item"
                 `shouldBe` Right (SingleContentSlide
                     "Slide Title"
-                    (BulletList [ plainTextBlock "First item"
-                                , plainTextBlock "Second item"
-                                ]))
+                    (flatBulletList ["First item", "Second item"]))
     describe "parseSlideshow" $ do
         it "parses a title-only slideshow" $ do
             parseSlideshow' testSlideshowTitleOnly `shouldBe`
@@ -174,9 +176,7 @@ spec = do
             [ TitleSlide "Slideshow Title" Nothing
             , SingleContentSlide
                 "Slide Title"
-                (BulletList [ plainTextBlock "First item"
-                            , plainTextBlock "Second item"
-                            ])
+                (flatBulletList ["First item", "Second item"])
             ]
 
     testSlideshowTwoBulletListSlides =
@@ -187,14 +187,10 @@ spec = do
             [ TitleSlide "Slideshow Title" Nothing
             , SingleContentSlide
                   "Slide Title"
-                  (BulletList [ plainTextBlock "First item"
-                              , plainTextBlock "Second item"
-                              ])
+                  (flatBulletList ["First item", "Second item"])
             , SingleContentSlide
                   "Second Slide Title"
-                  (BulletList [ plainTextBlock "1st item"
-                              , plainTextBlock "2nd item"
-                              ])
+                  (flatBulletList ["1st item", "2nd item"])
             ]
 
     testSlideshowMixedSlides = T.unlines
@@ -220,9 +216,7 @@ spec = do
             , SingleContentSlide "Empty Slide" NoContent
             , SingleContentSlide
                   "List Slide"
-                  (BulletList [ plainTextBlock "First item"
-                              , plainTextBlock "Second item"
-                              ])
+                  (flatBulletList ["First item", "Second item"])
             , SingleContentSlide "Second Empty Slide" NoContent
             ]
 
@@ -231,5 +225,3 @@ spec = do
 
     trailingNewline = flip T.append "\n"
     trailingWhitespace = flip T.append "    "
-
-

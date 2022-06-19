@@ -32,14 +32,16 @@ import Text.Megaparsec ( Parsec
                        )
 import Text.Megaparsec.Char ( char, digitChar, eol, hspace, space, string )
 
-import Presentable.Data.Slideshow ( Copyright ( Copyright )
-                                  , CopyrightYear ( SingleYear, YearRange )
-                                  , Slideshow ( Slideshow )
-                                  , Slide ( SingleContentSlide, TitleSlide )
-                                  , SlideContent ( BulletList, NoContent )
-                                  , TextBlock
-                                  , plainTextBlock
-                                  )
+import Presentable.Data.Slideshow
+    ( BulletList ( BulletList )
+    , BulletListItem ( BulletListItem )
+    , Copyright ( Copyright )
+    , CopyrightYear ( SingleYear, YearRange )
+    , Slideshow ( Slideshow )
+    , Slide ( SingleContentSlide, TitleSlide )
+    , SlideContent ( BulletListContent, NoContent )
+    )
+import Presentable.Data.TextBlock ( plainTextBlock )
 
 type Parser = Parsec Void Text
 
@@ -124,12 +126,12 @@ slideContentParser = try bulletListParser <|> noContentParser
 
 -- | Parser for a bullet list.
 bulletListParser :: Parser SlideContent
-bulletListParser = emptyLine >> BulletList <$>
-    choice (map (NE.some . bulletListItemParser) ['-', '*', '+'])
+bulletListParser = emptyLine >> BulletListContent . BulletList <$>
+        choice (map (NE.some . bulletListItemParser) ['-', '*', '+'])
 
 -- | Parser for an item in a bullet list.
-bulletListItemParser :: Char -> Parser TextBlock
-bulletListItemParser bulletChar = plainTextBlock <$>
+bulletListItemParser :: Char -> Parser BulletListItem
+bulletListItemParser bulletChar = flip BulletListItem Nothing . plainTextBlock <$>
     between (string (T.cons bulletChar " ")) (optional eol) (continuedLine 2)
 
 -- | Parser for the content of an empty slide.
