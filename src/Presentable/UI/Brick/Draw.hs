@@ -4,10 +4,12 @@ module Presentable.UI.Brick.Draw where
 
 import Data.List.NonEmpty ( NonEmpty )
 import qualified Data.List.NonEmpty as NE
+import Data.Maybe ( fromMaybe )
 import Data.Text ( Text )
 import Brick
     ( Padding ( Max, Pad )
     , Widget
+    , (<=>)
     , (<+>)
     , emptyWidget
     , hLimit
@@ -31,14 +33,18 @@ import Presentable.App.State ( AppState
                              )
 import Presentable.Data.Buffer ( bufferCurrent )
 import Presentable.Data.Geometry ( Rect ( Rect ) )
-import Presentable.Data.Slideshow ( InlineTextTag ( PlainText )
-                                  , Slide ( SingleContentSlide , TitleSlide )
-                                  , SlideContent ( BulletList, NoContent )
-                                  , Slideshow ( slideshowCopyright )
+import Presentable.Data.Slideshow
+    ( BulletList ( BulletList, unBulletList )
+    , BulletListItem ( BulletListItem )
+    , Slide ( SingleContentSlide , TitleSlide )
+    , SlideContent ( BulletListContent, NoContent )
+    , Slideshow ( slideshowCopyright )
+    )
+import Presentable.Data.TextBlock ( InlineTextTag ( PlainText )
                                   , TaggedText
-                                  , TextBlock
+                                  , TextBlock ( unTextBlock )
                                   )
-import Presentable.Process.Slideshow ( wrapRelaxedAt )
+import Presentable.Data.Wrappable ( wrapRelaxedAt )
 import Presentable.UI.Brick.Attributes
     ( bulletAttr
     , copyrightAttr
@@ -87,17 +93,24 @@ drawSlide columns (SingleContentSlide title content) = padBottom Max $
 -- | Draw slide contents to the given width.
 drawContent :: Int -> SlideContent -> Widget Name
 drawContent _       NoContent          = emptyWidget
-drawContent columns (BulletList items) = padRight Max $
-    vBox $ map (drawBulletListItem columns) (NE.toList items)
+drawContent columns (BulletListContent (BulletList items)) = padRight Max $
+    vBox $ map (drawBulletListItem columns topLevelMarker) (NE.toList items)
 
 -- | Draw a bullet list item to the given width.
-drawBulletListItem :: Int -> TextBlock -> Widget Name
-drawBulletListItem columns tb =
-    withAttr bulletAttr (txt "• ") <+> drawTextBlock (columns - 2) tb
+drawBulletListItem :: Int -> BulletMarker -> BulletListItem -> Widget Name
+drawBulletListItem columns marker (BulletListItem tb sublist) =
+    withAttr bulletAttr (drawMarker marker) <+>
+        (drawTextBlock (columns - 2) tb <=>
+        fromMaybe emptyWidget (fmap drawSublist sublist))
+  where
+    drawSublist =
+        vBox . map drawItemNextLevel . NE.toList . unBulletList
+    drawItemNextLevel = drawBulletListItem (columns -2) (nextMarker marker)
 
 -- | Draw a text block wrapped at the specified width.
 drawTextBlock :: Int -> TextBlock -> Widget Name
-drawTextBlock columns tb = vBox $ map drawLine $ wrapRelaxedAt columns tb
+drawTextBlock columns tb =
+    vBox $ map (drawLine . unTextBlock) $ NE.toList $ wrapRelaxedAt columns tb
 
 -- | Draw a single line of text.
 drawLine :: NonEmpty TaggedText -> Widget Name
@@ -110,3 +123,28 @@ drawLine line = drawTaggedText t <+> case ts of
 -- | Draw a single tagged text element.
 drawTaggedText :: TaggedText -> Widget Name
 drawTaggedText (s, PlainText) = txt s
+
+-- | Bullet markers
+data BulletMarker = SolidCircle
+                  | OutlinedCircle
+                  | Square
+                  | Hyphen
+
+-- | The top-level bullet marker
+topLevelMarker :: BulletMarker
+topLevelMarker = SolidCircle
+
+-- | Cycle through bullet markers.
+nextMarker :: BulletMarker -> BulletMarker
+nextMarker SolidCircle    = OutlinedCircle
+nextMarker OutlinedCircle = Square
+nextMarker Square         = Hyphen
+nextMarker _              = SolidCircle
+
+-- | Draw a bullet marker.
+drawMarker :: BulletMarker -> Widget Name
+drawMarker marker = txt $ case marker of
+    SolidCircle    -> "• "
+    OutlinedCircle -> "◦ "
+    Square         -> "▪ "
+    Hyphen         -> "⁃ "

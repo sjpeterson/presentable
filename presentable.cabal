@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           presentable
-version:        0.1.0
+version:        0.2.0
 synopsis:       A program for running minimalist presentations in the terminal
 description:    Please see the README on GitHub at <https://github.com/sjpeterson/presentable#readme>
 category:       Presentation
@@ -32,10 +32,13 @@ library
       Presentable.App.State
       Presentable.Config
       Presentable.Data.AesonOptions
+      Presentable.Data.Block
       Presentable.Data.Buffer
       Presentable.Data.Config
       Presentable.Data.Geometry
       Presentable.Data.Slideshow
+      Presentable.Data.TextBlock
+      Presentable.Data.Wrappable
       Presentable.Parse.Slideshow
       Presentable.Process.Slideshow
       Presentable.Traversals
@@ -82,8 +85,10 @@ test-suite presentable-test
   other-modules:
       Presentable.Data.BufferSpec
       Presentable.Data.SlideshowSpec
+      Presentable.Data.TextBlockSpec
       Presentable.Parse.SlideshowSpec
       Presentable.Process.SlideshowSpec
+      Presentable.TestUtils
       Presentable.TraversalsSpec
       Paths_presentable
   hs-source-dirs:

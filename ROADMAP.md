@@ -37,14 +37,14 @@
   - [x] --version or -v to print the version
 
 ## 0.2.0 - Nested bullet lists
-- [ ] Parse markdown
-  - [ ] Nested bullet list (Markdown bullet list following a heading 2)
-- [ ] Parse markdown
-  - [ ] Bullet list slide
-    - [ ] Left-aligned bullets
-      - [ ] Nested
-- [ ] Resize/fit
-  - [ ] Split only on top-level items
+- [x] Parse markdown
+  - [x] Nested bullet list (Markdown bullet list following a heading 2)
+- [x] Present
+  - [x] Bullet list slide
+    - [x] Left-aligned bullets
+      - [x] Nested
+- [x] Resize/fit
+  - [x] Split only on top-level items
 
 ## 0.3.0 - Plain text slides
 - [ ] Parse markdown
@@ -58,6 +58,10 @@
 
 ## Not yet prioritized
 
+- [ ] Inline formatting (bold, italic)
+  - [ ] Full words
+  - [ ] Part of word
+- [ ] Ordered lists
 - [ ] Tables
 - [ ] Code examples
 - [ ] Runnable code examples
