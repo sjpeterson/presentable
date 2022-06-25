@@ -39,9 +39,9 @@ import Presentable.Data.Slideshow
     , CopyrightYear ( SingleYear, YearRange )
     , Slideshow ( Slideshow )
     , Slide ( SingleContentSlide, TitleSlide )
-    , SlideContent ( BulletListContent, NoContent )
+    , SlideContent ( BulletListContent, PlainTextContent, NoContent )
     )
-import Presentable.Data.TextBlock ( plainTextBlock )
+import Presentable.Data.TextBlock ( TextBlock, plainTextBlock )
 
 type Parser = Parsec Void Text
 
@@ -122,7 +122,9 @@ heading2Parser = between
 
 -- | Parser for slide contents.
 slideContentParser :: Parser SlideContent
-slideContentParser = try (bulletListParser 0) <|> noContentParser
+slideContentParser = try (bulletListParser 0)
+                 <|> try plainTextParser
+                 <|> try noContentParser
 
 -- | Parser for a bullet list.
 bulletListParser :: Int -> Parser SlideContent
@@ -140,17 +142,26 @@ bulletListItemParser indent bulletChar = do
         ['-', '*', '+']
     return $ BulletListItem itemText sublist
 
+-- | Parser for plain text slide content.
+plainTextParser :: Parser SlideContent
+plainTextParser = PlainTextContent <$> NE.some textBlockParser
+
+-- | Parser for a single text block.
+textBlockParser :: Parser TextBlock
+textBlockParser = plainTextBlock <$>
+    between emptyLine (optional eol) (continuedLine 0)
+
 -- | Parser for the content of an empty slide.
 noContentParser :: Parser SlideContent
 noContentParser = lookAhead (space >> try eof <|> void (char '#'))
                >> return NoContent
 
 -- ------- --
--- Helpers --
--- ------- --
 
 -- | Parser for any text until EOL that is not a tag.
 nonTag :: Parser Text
+-- Helpers --
+-- ------- --
 nonTag = lookAhead (noneOf ['#', '@', ' ']) >> restOfLine
 
 -- | Parser for an empty line.
@@ -164,6 +175,7 @@ restOfLine = T.strip . T.pack <$> some (anySingleBut '\n')
 -- | Creates a parser for lines with continuation.
 continuedLine :: Int -> Parser Text
 continuedLine indentationLevel = do
+    _ <- lookAhead $ noneOf ['-', '*', '+', '#']
     first <- T.strip . T.pack <$> some (anySingleBut '\n')
     continuation <- optional $
         try (continuationMatch >> continuedLine indentationLevel)
