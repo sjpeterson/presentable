@@ -37,12 +37,12 @@
   - [x] --version or -v to print the version
 
 ## 0.2.0 - Nested bullet lists
-- [ ] Parse markdown
-  - [ ] Nested bullet list (Markdown bullet list following a heading 2)
-- [ ] Present
-  - [ ] Bullet list slide
-    - [ ] Left-aligned bullets
-      - [ ] Nested
+- [x] Parse markdown
+  - [x] Nested bullet list (Markdown bullet list following a heading 2)
+- [x] Present
+  - [x] Bullet list slide
+    - [x] Left-aligned bullets
+      - [x] Nested
 - [x] Resize/fit
   - [x] Split only on top-level items
 
