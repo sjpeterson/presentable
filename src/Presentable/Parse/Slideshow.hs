@@ -122,17 +122,23 @@ heading2Parser = between
 
 -- | Parser for slide contents.
 slideContentParser :: Parser SlideContent
-slideContentParser = try bulletListParser <|> noContentParser
+slideContentParser = try (bulletListParser 0) <|> noContentParser
 
 -- | Parser for a bullet list.
-bulletListParser :: Parser SlideContent
-bulletListParser = emptyLine >> BulletListContent . BulletList <$>
-        choice (map (NE.some . bulletListItemParser) ['-', '*', '+'])
+bulletListParser :: Int -> Parser SlideContent
+bulletListParser indent = emptyLine >> BulletListContent . BulletList <$>
+        choice (map (NE.some . bulletListItemParser indent) ['-', '*', '+'])
 
 -- | Parser for an item in a bullet list.
-bulletListItemParser :: Char -> Parser BulletListItem
-bulletListItemParser bulletChar = flip BulletListItem Nothing . plainTextBlock <$>
-    between (string (T.cons bulletChar " ")) (optional eol) (continuedLine 2)
+bulletListItemParser :: Int -> Char -> Parser BulletListItem
+bulletListItemParser indent bulletChar = do
+    _ <- string $ T.pack $ (replicate indent ' ') ++ [bulletChar, ' ']
+    itemText <- plainTextBlock <$> continuedLine (indent + 2)
+    _ <- optional eol
+    sublist <- (fmap $ fmap BulletList) $ optional $ choice $ map
+        (NE.some . bulletListItemParser (indent + 2))
+        ['-', '*', '+']
+    return $ BulletListItem itemText sublist
 
 -- | Parser for the content of an empty slide.
 noContentParser :: Parser SlideContent
@@ -166,4 +172,5 @@ continuedLine indentationLevel = do
         Just c -> T.unwords [first, c]
   where
     continuationMatch =
-        string $ T.append "\n" (T.replicate indentationLevel " ")
+        (string $ T.pack $ '\n' : replicate indentationLevel ' ') >>
+            (lookAhead (noneOf ['-', '*', '+']))

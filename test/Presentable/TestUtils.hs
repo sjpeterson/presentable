@@ -12,12 +12,15 @@ flatBulletList :: NonEmpty Text -> SlideContent
 flatBulletList = BulletListContent . flatBulletList'
 
 nestedBulletList :: NonEmpty (Text , Maybe (NonEmpty Text)) -> SlideContent
-nestedBulletList = BulletListContent . BulletList . fmap listItem
-  where
-    listItem (itemText, sublist) =
-        BulletListItem (plainTextBlock itemText) (fmap flatBulletList' sublist)
+nestedBulletList = BulletListContent . nestedBulletList'
 
 flatBulletList' :: NonEmpty Text -> BulletList
 flatBulletList' = BulletList . fmap listItem
   where
     listItem = (flip BulletListItem) Nothing . plainTextBlock
+
+nestedBulletList' :: NonEmpty (Text , Maybe (NonEmpty Text)) -> BulletList
+nestedBulletList' = BulletList . fmap listItem
+  where
+    listItem (itemText, sublist) =
+        BulletListItem (plainTextBlock itemText) (fmap flatBulletList' sublist)

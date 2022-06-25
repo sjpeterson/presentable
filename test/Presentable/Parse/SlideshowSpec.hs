@@ -20,7 +20,10 @@ import Presentable.Data.Slideshow ( BulletList (..)
 import Presentable.Data.TextBlock ( plainTextBlock )
 import Presentable.Parse.Slideshow ( parseSlideshow, parseSlide )
 
-import Presentable.TestUtils ( flatBulletList )
+import Presentable.TestUtils ( flatBulletList
+                             , flatBulletList'
+                             , nestedBulletList'
+                             )
 
 spec :: Spec
 spec = do
@@ -84,6 +87,9 @@ spec = do
         it "parses a bullet list slide" $ do
             parseSlideshow' testSlideshowBulletListSlide `shouldBe`
                 Right expectedSlideshowBulletListSlide
+        it "parses a nested bullet list slide" $ do
+            parseSlideshow' testSlideshowNestedBulletListSlide `shouldBe`
+                Right expectedSlideshowNestedBulletListSlide
         it "does not accept mixing bullet characters in a list" $ do
             parseSlideshow' testSlideshowInvalidBulletListSlide `shouldSatisfy`
                 isLeft
@@ -222,6 +228,44 @@ spec = do
 
     testSlideshowInvalidBulletListSlide =
         "# Slideshow Title\n\n## Slide Title\n\n- First item\n* Second item"
+
+    testSlideshowNestedBulletListSlide = T.unlines
+        [ "# Slideshow Title"
+        , ""
+        , "## Slide Title"
+        , ""
+        , "- First item"
+        , "  - Only child"
+        , "- Second item"
+        , "  - First child"
+        , "  - Second child"
+        , "    - A grandchild"
+        , "- Third item"
+        , "- Fourth item"
+        , "  - Only child"
+        ]
+    expectedSlideshowNestedBulletListSlide =
+        Slideshow
+            Nothing
+            [ TitleSlide "Slideshow Title" Nothing
+            , SingleContentSlide
+                  "Slide Title"
+                  (BulletListContent $ BulletList
+                       [ BulletListItem
+                             (plainTextBlock "First item")
+                             (Just $ flatBulletList' ["Only child"])
+                       , BulletListItem
+                             (plainTextBlock "Second item")
+                             (Just $ nestedBulletList'
+                                  [ ("First child", Nothing)
+                                  , ("Second child", Just ["A grandchild"])
+                                  ])
+                       , BulletListItem (plainTextBlock "Third item") Nothing
+                       , BulletListItem
+                             (plainTextBlock "Fourth item")
+                             (Just $ flatBulletList' ["Only child"])
+                       ])
+            ]
 
     trailingNewline = flip T.append "\n"
     trailingWhitespace = flip T.append "    "
