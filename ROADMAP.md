@@ -47,14 +47,14 @@
   - [x] Split only on top-level items
 
 ## 0.3.0 - Plain text slides
-- [ ] Parse markdown
-  - [ ] Plain text blocks
-- [ ] Present
-  - [ ] Plain text slide
-    - [ ] Left-aligned header
-    - [ ] Left-aligned text blocks
-- [ ] Resize/fit
-  - [ ] Split plain text slides to fit, keeping text blocks intact
+- [x] Parse markdown
+  - [x] Plain text blocks
+- [x] Present
+  - [x] Plain text slide
+    - [x] Left-aligned header
+    - [x] Left-aligned text blocks
+- [x] Resize/fit
+  - [x] Split plain text slides to fit, keeping text blocks intact
 
 ## Not yet prioritized
 
