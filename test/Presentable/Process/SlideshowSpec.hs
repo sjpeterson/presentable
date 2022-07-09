@@ -9,9 +9,10 @@ import Data.List.NonEmpty ( NonEmpty ( (:|) ) )
 import Test.Hspec ( Spec, describe, it, shouldBe, shouldSatisfy )
 
 import Presentable.Data.Geometry ( Rect ( Rect ) )
-import Presentable.Data.Slideshow ( Slide ( SingleContentSlide, TitleSlide )
-                                  , SlideContent ( BulletListContent )
-                                  )
+import Presentable.Data.Slideshow
+    ( Slide ( SingleContentSlide, TitleSlide )
+    , SlideContent ( BulletListContent, PlainTextContent )
+    )
 import Presentable.Data.TextBlock ( TextBlock ( TextBlock ) , plainTextBlock )
 import Presentable.Process.Slideshow ( fitTo, zipValues )
 
@@ -90,6 +91,17 @@ spec = do
         it "fails if a sublist has too many items to fit" $ do
             fitTo (Rect 12 5) 0 [testNestedBulletListSlide] `shouldSatisfy`
                 isLeft
+        it "splits slides between plain text blocks" $ do
+            fitTo (Rect 16 6) 0 [testPlainTextSlide] `shouldBe` Right
+                [ SingleContentSlide
+                      "Slide Title"
+                      (PlainTextContent
+                           [ plainTextBlock "This is the first paragraph" ])
+                , SingleContentSlide
+                      "Slide Title"
+                      (PlainTextContent
+                           [ plainTextBlock "This is the second paragraph" ])
+                ]
   where
     testTitleSlide = TitleSlide "Presentation" (Just "With a subtitle")
     testBulletListSlide = SingleContentSlide
@@ -120,3 +132,8 @@ spec = do
                         , "Second item"
                         , "Third item"
                         ])
+    testPlainTextSlide = SingleContentSlide
+        "Slide Title"
+        (PlainTextContent [ plainTextBlock "This is the first paragraph"
+                          , plainTextBlock "This is the second paragraph"
+                          ])

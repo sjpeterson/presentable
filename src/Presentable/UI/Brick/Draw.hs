@@ -2,6 +2,8 @@
 
 module Presentable.UI.Brick.Draw where
 
+
+import Data.List ( intersperse )
 import Data.List.NonEmpty ( NonEmpty )
 import qualified Data.List.NonEmpty as NE
 import Data.Maybe ( fromMaybe )
@@ -37,7 +39,7 @@ import Presentable.Data.Slideshow
     ( BulletList ( BulletList, unBulletList )
     , BulletListItem ( BulletListItem )
     , Slide ( SingleContentSlide , TitleSlide )
-    , SlideContent ( BulletListContent, NoContent )
+    , SlideContent ( BulletListContent, NoContent, PlainTextContent )
     , Slideshow ( slideshowCopyright )
     )
 import Presentable.Data.TextBlock ( InlineTextTag ( PlainText )
@@ -92,9 +94,12 @@ drawSlide columns (SingleContentSlide title content) = padBottom Max $
 
 -- | Draw slide contents to the given width.
 drawContent :: Int -> SlideContent -> Widget Name
-drawContent _       NoContent          = emptyWidget
+drawContent _       NoContent                              = emptyWidget
 drawContent columns (BulletListContent (BulletList items)) = padRight Max $
     vBox $ map (drawBulletListItem columns topLevelMarker) (NE.toList items)
+drawContent columns (PlainTextContent paragraphs)          = padRight Max $
+    vBox $ intersperse (txt " ") $
+        map (drawTextBlock columns) (NE.toList paragraphs)
 
 -- | Draw a bullet list item to the given width.
 drawBulletListItem :: Int -> BulletMarker -> BulletListItem -> Widget Name

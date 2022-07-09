@@ -99,6 +99,9 @@ spec = do
         it "parses multiple bullet list slides" $ do
             parseSlideshow' testSlideshowTwoBulletListSlides `shouldBe`
                 Right expectedSlideshowTwoBulletListSlides
+        it "parses plain text slides" $ do
+            parseSlideshow' testSlideshowPlainTextSlide `shouldBe`
+                Right expectedSlideshowPlainTextSlide
         it "parses mixed slides" $ do
             parseSlideshow' testSlideshowMixedSlides `shouldBe`
                 Right expectedSlideshowMixedSlides
@@ -266,6 +269,29 @@ spec = do
                              (Just $ flatBulletList' ["Only child"])
                        ])
             ]
+
+    testSlideshowPlainTextSlide = T.unlines
+        [ "# Slideshow Title"
+        , ""
+        , "## Slide Title"
+        , ""
+        , "First plain text"
+        , "block. It spans many"
+        , "lines."
+        , ""
+        , "Second plain text block."
+        ]
+    expectedSlideshowPlainTextSlide = Slideshow
+        Nothing
+        [ TitleSlide "Slideshow Title" Nothing
+        , SingleContentSlide
+              "Slide Title"
+              (PlainTextContent
+                   [ plainTextBlock
+                         "First plain text block. It spans many lines."
+                   , plainTextBlock "Second plain text block."
+                   ])
+        ]
 
     trailingNewline = flip T.append "\n"
     trailingWhitespace = flip T.append "    "

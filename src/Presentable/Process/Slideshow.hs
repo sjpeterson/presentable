@@ -17,7 +17,7 @@ import Presentable.Data.Geometry ( Rect ( Rect, rectColumns, rectRows )
 import Presentable.Data.Slideshow
     ( BulletList ( BulletList )
     , Slide ( SingleContentSlide , TitleSlide )
-    , SlideContent ( BulletListContent, NoContent )
+    , SlideContent ( BulletListContent, NoContent, PlainTextContent )
     )
 import Presentable.Data.TextBlock ( plainTextBlock )
 import Presentable.Data.Wrappable ( WrappingError )
@@ -54,18 +54,21 @@ fitContentTo :: Rect
              -> Either WrappingError (NonEmpty SlideContent)
 fitContentTo _ NoContent = Right [NoContent]
 fitContentTo rect (BulletListContent (BulletList items)) =
-    fmap (BulletListContent . BulletList) <$> vSplit rect items
+    fmap (BulletListContent . BulletList) <$> vSplit 0 rect items
+fitContentTo rect (PlainTextContent textBlocks) =
+    fmap PlainTextContent <$> vSplit 1 rect textBlocks
 
 -- | Vertically split a non-empty list of text blocks to fit the given
 -- dimensions.
 vSplit :: Block a
-       => Rect
+       => Int
+       -> Rect
        -> NonEmpty a
        -> Either WrappingError (NonEmpty (NonEmpty a))
-vSplit Rect {..} = splitWhen
+vSplit padding Rect {..} = splitWhen
     (wrappedHeightAt rectColumns)
     (> rectRows)
-    (+)
+    ((+) . (+ padding))
     (const "A text block is too large to fit")
 
 -- | Pair each slide with their positional value.
@@ -85,5 +88,6 @@ slideValue (SingleContentSlide _ slideContent) = slideContentValue slideContent
 -- position in slideshow.
 slideContentValue :: SlideContent -> Int
 slideContentValue (BulletListContent (BulletList items)) = NE.length items
-slideContentValue NoContent          = 1
+slideContentValue (PlainTextContent paragraphs)          = NE.length paragraphs
+slideContentValue NoContent                              = 1
 

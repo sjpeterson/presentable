@@ -14,11 +14,11 @@ mapExpandM f xs = foldr' f' (f $ NE.last xs) (NE.init xs)
 
 -- | Split a non-empty list on some condition.
 splitWhen :: (a -> Either b c)
-           -> (c -> Bool)
-           -> (c -> c -> c)
-           -> (a -> b)
-           -> NonEmpty a
-           -> Either b (NonEmpty (NonEmpty a))
+          -> (c -> Bool)
+          -> (c -> c -> c)
+          -> (a -> b)
+          -> NonEmpty a
+          -> Either b (NonEmpty (NonEmpty a))
 splitWhen valueOf c agg fail (x:|xs) = NE.reverse .fmap (NE.reverse . fst) <$>
     foldr' ((=<<) . f) initial (reverse xs)
   where

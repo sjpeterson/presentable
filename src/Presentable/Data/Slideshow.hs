@@ -26,6 +26,7 @@ data Slide = TitleSlide Title (Maybe Text)
 
 -- | Slide content data type.
 data SlideContent = BulletListContent BulletList
+                  | PlainTextContent (NonEmpty TextBlock)
                   | NoContent
     deriving (Eq, Show)
 
