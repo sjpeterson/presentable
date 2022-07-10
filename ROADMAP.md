@@ -56,6 +56,8 @@
 - [x] Resize/fit
   - [x] Split plain text slides to fit, keeping text blocks intact
 
+## 0.3.1 - Use commonmark parser
+
 ## Not yet prioritized
 
 - [ ] Inline formatting (bold, italic)
