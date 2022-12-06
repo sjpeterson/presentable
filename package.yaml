@@ -22,7 +22,6 @@ library:
   dependencies:
   - aeson
   - brick
-  - commonmark
   - directory
   - filepath
   - megaparsec

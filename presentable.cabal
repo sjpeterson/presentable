@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -35,10 +35,13 @@ library
       Presentable.Data.Block
       Presentable.Data.Buffer
       Presentable.Data.Config
+      Presentable.Data.Document
       Presentable.Data.Geometry
       Presentable.Data.Slideshow
       Presentable.Data.TextBlock
       Presentable.Data.Wrappable
+      Presentable.Parse.Commonmark
+      Presentable.Parse.Document
       Presentable.Parse.Slideshow
       Presentable.Process.Slideshow
       Presentable.Traversals
@@ -54,7 +57,6 @@ library
       aeson
     , base >=4.7 && <5
     , brick
-    , commonmark
     , directory
     , filepath
     , megaparsec
@@ -87,6 +89,7 @@ test-suite presentable-test
       Presentable.Data.BufferSpec
       Presentable.Data.SlideshowSpec
       Presentable.Data.TextBlockSpec
+      Presentable.Parse.DocumentSpec
       Presentable.Parse.SlideshowSpec
       Presentable.Process.SlideshowSpec
       Presentable.TestUtils

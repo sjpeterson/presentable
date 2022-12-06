@@ -1,7 +1,5 @@
 module Presentable.Parse.Commonmark where
 
-import Commonmark ( commonmark )
-
 -- commonmark :: IsBlock il bl => String -> Text -> Either ParseError bl
 --
 -- cf. parseSlideshow :: FilePath -> Text -> Either ParsingError Slideshow
