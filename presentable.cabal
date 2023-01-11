@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -39,6 +39,7 @@ library
       Presentable.Data.Slideshow
       Presentable.Data.TextBlock
       Presentable.Data.Wrappable
+      Presentable.Parse.Pandoc
       Presentable.Parse.Slideshow
       Presentable.Process.Slideshow
       Presentable.Traversals
@@ -60,6 +61,7 @@ library
     , microlens
     , microlens-th
     , mtl
+    , pandoc
     , parser-combinators
     , text
     , vty
