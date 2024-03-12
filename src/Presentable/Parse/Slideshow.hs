@@ -1,47 +1,48 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Presentable.Parse.Slideshow
-    ( parseSlideshow
-    , parseSlide
-    ) where
+module Presentable.Parse.Slideshow (
+    parseSlideshow,
+    parseSlide,
+) where
 
 import qualified Control.Monad.Combinators.NonEmpty as NE
-import Data.Bifunctor ( first )
-import Data.Functor ( void )
-import Data.List.NonEmpty ( NonEmpty ( (:|) ) )
-import Data.Maybe ( isJust )
-import Data.Text ( Text )
+import Data.Bifunctor (first)
+import Data.Functor (void)
+import Data.List.NonEmpty (NonEmpty ((:|)))
+import Data.Maybe (isJust)
+import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Void ( Void )
-import Text.Megaparsec ( Parsec
-                       , ParseErrorBundle
-                       , (<|>)
-                       , anySingleBut
-                       , between
-                       , choice
-                       , count
-                       , eof
-                       , errorBundlePretty
-                       , lookAhead
-                       , many
-                       , noneOf
-                       , optional
-                       , runParser
-                       , some
-                       , try
-                       )
-import Text.Megaparsec.Char ( char, digitChar, eol, hspace, space, string )
+import Data.Void (Void)
+import Text.Megaparsec (
+    ParseErrorBundle,
+    Parsec,
+    anySingleBut,
+    between,
+    choice,
+    count,
+    eof,
+    errorBundlePretty,
+    lookAhead,
+    many,
+    noneOf,
+    optional,
+    runParser,
+    some,
+    try,
+    (<|>),
+ )
+import Text.Megaparsec.Char (char, digitChar, eol, hspace, space, string)
 
-import Presentable.Data.Slideshow
-    ( BulletList ( BulletList )
-    , BulletListItem ( BulletListItem )
-    , Copyright ( Copyright )
-    , CopyrightYear ( SingleYear, YearRange )
-    , Slideshow ( Slideshow )
-    , Slide ( SingleContentSlide, TitleSlide )
-    , SlideContent ( BulletListContent, PlainTextContent, NoContent )
-    )
-import Presentable.Data.TextBlock ( TextBlock, plainTextBlock )
+import Presentable.Data.Slideshow (
+    BulletList (BulletList),
+    BulletListItem (BulletListItem),
+    Copyright (Copyright),
+    CopyrightYear (SingleYear, YearRange),
+    Slide (SingleContentSlide, TitleSlide),
+    SlideContent (BulletListContent, NoContent, PlainTextContent),
+    Slideshow (Slideshow),
+ )
+import Presentable.Data.TextBlock (TextBlock, plainTextBlock)
 
 type Parser = Parsec Void Text
 
@@ -93,7 +94,7 @@ copyrightYearParser = do
     from <- yearParser
     to <- optional ((try (string " - ") <|> string "-") >> yearParser)
     return $ case to of
-        Nothing  -> SingleYear from
+        Nothing -> SingleYear from
         Just to' -> YearRange from to'
 
 -- | Parser for a single year.
@@ -108,21 +109,25 @@ slideParser = do
 
 -- | Parser for a level 2 markdown heading.
 heading2Parser :: Parser Text
-heading2Parser = between
-    (string "## ")
-    (optional eol)
-    nonTag
+heading2Parser =
+    between
+        (string "## ")
+        (optional eol)
+        nonTag
 
 -- | Parser for slide contents.
 slideContentParser :: Parser SlideContent
-slideContentParser = try (bulletListParser 0)
-                 <|> try plainTextParser
-                 <|> try noContentParser
+slideContentParser =
+    try (bulletListParser 0)
+        <|> try plainTextParser
+        <|> try noContentParser
 
 -- | Parser for a bullet list.
 bulletListParser :: Int -> Parser SlideContent
-bulletListParser indent = emptyLine >> BulletListContent . BulletList <$>
-        choice (map (NE.some . bulletListItemParser indent) ['-', '*', '+'])
+bulletListParser indent =
+    emptyLine
+        >> BulletListContent . BulletList
+            <$> choice (map (NE.some . bulletListItemParser indent) ['-', '*', '+'])
 
 -- | Parser for an item in a bullet list.
 bulletListItemParser :: Int -> Char -> Parser BulletListItem
@@ -130,9 +135,13 @@ bulletListItemParser indent bulletChar = do
     _ <- string $ T.pack $ replicate indent ' ' ++ [bulletChar, ' ']
     itemText <- plainTextBlock <$> continuedLine (indent + 2)
     _ <- optional eol
-    sublist <- fmap (fmap BulletList) $ optional $ choice $ map
-        (NE.some . bulletListItemParser (indent + 2))
-        ['-', '*', '+']
+    sublist <-
+        fmap (fmap BulletList) $
+            optional $
+                choice $
+                    map
+                        (NE.some . bulletListItemParser (indent + 2))
+                        ['-', '*', '+']
     return $ BulletListItem itemText sublist
 
 -- | Parser for plain text slide content.
@@ -141,13 +150,15 @@ plainTextParser = PlainTextContent <$> NE.some textBlockParser
 
 -- | Parser for a single text block.
 textBlockParser :: Parser TextBlock
-textBlockParser = plainTextBlock <$>
-    between emptyLine (optional eol) (continuedLine 0)
+textBlockParser =
+    plainTextBlock
+        <$> between emptyLine (optional eol) (continuedLine 0)
 
 -- | Parser for the content of an empty slide.
 noContentParser :: Parser SlideContent
-noContentParser = lookAhead (space >> try eof <|> void (char '#'))
-               >> return NoContent
+noContentParser =
+    lookAhead (space >> try eof <|> void (char '#'))
+        >> return NoContent
 
 -- ------- --
 
@@ -170,12 +181,13 @@ continuedLine :: Int -> Parser Text
 continuedLine indentationLevel = do
     _ <- lookAhead $ noneOf ['-', '*', '+', '#']
     first <- T.strip . T.pack <$> some (anySingleBut '\n')
-    continuation <- optional $
-        try (continuationMatch >> continuedLine indentationLevel)
+    continuation <-
+        optional $
+            try (continuationMatch >> continuedLine indentationLevel)
     return $ case continuation of
         Nothing -> first
         Just c -> T.unwords [first, c]
   where
     continuationMatch =
-        string (T.pack $ '\n' : replicate indentationLevel ' ') >>
-            lookAhead (noneOf ['-', '*', '+'])
+        string (T.pack $ '\n' : replicate indentationLevel ' ')
+            >> lookAhead (noneOf ['-', '*', '+'])

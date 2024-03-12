@@ -1,6 +1,6 @@
 module Presentable.UI.Brick.Attributes where
 
-import Brick ( AttrName, attrName )
+import Brick (AttrName, attrName)
 
 -- | Brick attribute name.
 bulletAttr, copyrightAttr, errorAttr, slideTitleAttr, subtitleAttr, titleAttr :: AttrName

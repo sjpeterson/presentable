@@ -1,25 +1,26 @@
-{-# LANGUAGE OverloadedLists   #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Presentable.Data.SlideshowSpec where
 
-import Test.Hspec ( Spec, describe, it, shouldBe )
+import Test.Hspec (Spec, describe, it, shouldBe)
 
-import Presentable.Data.Block ( wrappedHeightAt )
-import Presentable.Data.Slideshow ( BulletListItem (..)
-                                  , Copyright (..)
-                                  , CopyrightYear (..)
-                                  )
-import Presentable.Data.TextBlock ( plainTextBlock )
+import Presentable.Data.Block (wrappedHeightAt)
+import Presentable.Data.Slideshow (
+    BulletListItem (..),
+    Copyright (..),
+    CopyrightYear (..),
+ )
+import Presentable.Data.TextBlock (plainTextBlock)
 
-import Presentable.TestUtils ( flatBulletList' )
+import Presentable.TestUtils (flatBulletList')
 
 spec :: Spec
 spec = do
     describe "Show Copyright" $ do
         it "shows only copyright holder when year is Nothing" $ do
-            show (Copyright "Example C. Holder" Nothing) `shouldBe`
-                "© Example C. Holder"
+            show (Copyright "Example C. Holder" Nothing)
+                `shouldBe` "© Example C. Holder"
         it "shows a single year before the copyright holder" $ do
             show (Copyright "Example C. Holder" (Just $ SingleYear 2022))
                 `shouldBe` "© 2022 Example C. Holder"
@@ -35,9 +36,9 @@ spec = do
         it "accounts for sublist indentation" $ do
             wrappedHeightAt 16 testBulletListNodeItem `shouldBe` Right 3
             wrappedHeightAt 15 testBulletListNodeItem `shouldBe` Right 4
-
   where
     testBulletListLeafItem = BulletListItem (plainTextBlock "Item text") Nothing
-    testBulletListNodeItem = BulletListItem
-        (plainTextBlock "Item text")
-        (Just $ flatBulletList' ["First child", "Second child"])
+    testBulletListNodeItem =
+        BulletListItem
+            (plainTextBlock "Item text")
+            (Just $ flatBulletList' ["First child", "Second child"])

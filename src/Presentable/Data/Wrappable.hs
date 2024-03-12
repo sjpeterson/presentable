@@ -1,7 +1,7 @@
 module Presentable.Data.Wrappable where
 
-import Data.List.NonEmpty ( NonEmpty )
-import Data.Text ( Text )
+import Data.List.NonEmpty (NonEmpty)
+import Data.Text (Text)
 
 type WrappingError = Text
 
