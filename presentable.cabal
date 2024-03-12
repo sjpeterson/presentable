@@ -1,11 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           presentable
-version:        0.2.0
+version:        0.2.1
 synopsis:       A program for running minimalist presentations in the terminal
 description:    Please see the README on GitHub at <https://github.com/sjpeterson/presentable#readme>
 category:       Presentation
