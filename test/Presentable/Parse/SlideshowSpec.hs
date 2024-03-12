@@ -29,15 +29,15 @@ spec :: Spec
 spec = do
     describe "parseSlide" $ do
         it "parses an empty slide" $ do
-            parseSlide "" "\n## Slide Title" `shouldBe`
+            parseSlide "" "## Slide Title" `shouldBe`
                 Right (SingleContentSlide "Slide Title" NoContent)
         it "parses a bullet list slide" $ do
-            parseSlide "" "\n## Slide Title\n\n- First item\n- Second item"
+            parseSlide "" "## Slide Title\n\n- First item\n- Second item"
                 `shouldBe` Right (SingleContentSlide
                     "Slide Title"
                     (flatBulletList ["First item", "Second item"]))
         it "unwraps line continuation in bullet list slides" $ do
-            parseSlide "" "\n## Slide Title\n\n- First item\n- Second\n  item"
+            parseSlide "" "## Slide Title\n\n- First item\n- Second\n  item"
                 `shouldBe` Right (SingleContentSlide
                     "Slide Title"
                     (flatBulletList ["First item", "Second item"]))

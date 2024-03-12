@@ -1,10 +1,10 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
 module Presentable.UI.Brick
     ( runBrick
     ) where
 
+import Control.Monad ( void )
 import Control.Monad.IO.Class ( liftIO )
 import Data.Bifunctor ( second )
 
@@ -19,13 +19,12 @@ import Brick
     , AttrMap
     , BrickEvent ( VtyEvent )
     , EventM
-    , Next
     , attrMap
-    , continue
     , defaultMain
     , fg
     , getVtyHandle
     , halt
+    , modify
     , neverShowCursor
     )
 import qualified Graphics.Vty as V
@@ -66,7 +65,7 @@ import Presentable.UI.Brick.Attributes ( bulletAttr
 
 -- | run the Brick application.
 runBrick :: AppEnv -> IO ()
-runBrick appEnv = defaultMain (app appEnv) (initState appEnv) >> return ()
+runBrick appEnv = void $ defaultMain (app appEnv) (initState appEnv)
 
 -- | Create a Brick application from the environment.
 app :: AppEnv -> App AppState e Name
@@ -79,41 +78,39 @@ app appEnv = App { appDraw = drawUI appEnv
 
 -- | Brick application start event. Gets terminal size and processes
 -- slideshow accordingly at startup.
-appStart :: AppEnv -> AppState -> EventM Name AppState
-appStart appEnv appState = do
+appStart :: AppEnv -> EventM Name AppState ()
+appStart appEnv = do
     vtyOutput <- V.outputIface <$> getVtyHandle
     rect <- liftIO (slideshowRect appEnv <$> V.displayBounds vtyOutput)
-    return $ appState & appStatePosition .~ 0
-                      & appStateRect .~ rect
-                      & appStateSlidesBuffer .~ (makeBuffer appEnv rect)
+    modify (\appState -> appState & appStatePosition .~ 0
+                                  & appStateRect .~ rect
+                                  & appStateSlidesBuffer .~ makeBuffer appEnv rect)
 
 -- | Brick application event handler.
 handleEvent :: AppEnv
-            -> AppState
             -> BrickEvent Name e
-            -> EventM Name (Next AppState)
-handleEvent appEnv appState event = case event of
-    (VtyEvent (V.EvKey V.KEsc        [])) -> halt appState
-    (VtyEvent (V.EvKey V.KRight      [])) -> continue nextSlide
-    (VtyEvent (V.EvKey (V.KChar 'l') [])) -> continue nextSlide
-    (VtyEvent (V.EvKey (V.KChar ' ') [])) -> continue nextSlide
-    (VtyEvent (V.EvKey V.KLeft       [])) -> continue prevSlide
-    (VtyEvent (V.EvKey (V.KChar 'h') [])) -> continue prevSlide
-    (VtyEvent (V.EvKey V.KBS         [])) -> continue prevSlide
-    (VtyEvent (V.EvResize columns rows)) -> continue $
-        fitSlides (slideshowRect appEnv (columns, rows))
-    _                                    -> continue appState
+            -> EventM Name AppState ()
+handleEvent appEnv event = case event of
+    (VtyEvent (V.EvKey V.KEsc        [])) -> halt
+    (VtyEvent (V.EvKey V.KRight      [])) -> modify nextSlide
+    (VtyEvent (V.EvKey (V.KChar 'l') [])) -> modify nextSlide
+    (VtyEvent (V.EvKey (V.KChar ' ') [])) -> modify nextSlide
+    (VtyEvent (V.EvKey V.KLeft       [])) -> modify prevSlide
+    (VtyEvent (V.EvKey (V.KChar 'h') [])) -> modify prevSlide
+    (VtyEvent (V.EvKey V.KBS         [])) -> modify prevSlide
+    (VtyEvent (V.EvResize columns rows))  -> modify $ fitSlides (slideshowRect appEnv (columns, rows))
+    _other                                -> return ()
   where
     nextSlide = moveBy next
     prevSlide = moveBy prev
-    moveBy f = case appState ^. appStateSlidesBuffer of
+    moveBy f appState = case appState ^. appStateSlidesBuffer of
         Left _       -> appState
         Right buffer ->
             let newBuffer@(Buffer (_, position) _ _) = f buffer
             in appState & appStatePosition .~ position
                         & appStateSlidesBuffer .~ Right newBuffer
 
-    fitSlides rect =
+    fitSlides rect appState =
         let position = appState ^. appStatePosition
             atPosition = (> position) . snd
             newBuffer = fmap (forwardUntil atPosition) (makeBuffer appEnv rect)

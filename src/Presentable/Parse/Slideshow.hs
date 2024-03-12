@@ -64,22 +64,16 @@ slideshowParser :: Parser Slideshow
 slideshowParser = do
     copyright <- optional copyrightParser
     title <- heading1Parser
-    subtitle <- optional $ try solitaryLineParser
+    subtitle <- many emptyLine >> optional (try nonTag)
+    _ <- optional eol
     let titleSlide = TitleSlide title subtitle
-    slides <- many slideParser
+    slides <- many (many emptyLine >> slideParser)
     _ <- eof
     return $ Slideshow copyright (titleSlide :| slides)
 
 -- | Parser for a level 1 markdown heading.
 heading1Parser :: Parser Text
 heading1Parser = between (string "# ") (optional eol) nonTag
-
--- | Parser for a line of text surrounded by whitespace.
-solitaryLineParser :: Parser Text
-solitaryLineParser = between
-    emptyLine
-    (choice [eof, (optional eol >> lookAhead emptyLine)])
-    nonTag
 
 -- | Parser for a copyright tag.
 copyrightParser :: Parser Copyright
@@ -110,13 +104,12 @@ yearParser = read <$> count 4 digitChar
 slideParser :: Parser Slide
 slideParser = do
     title <- heading2Parser
-    content <- slideContentParser
-    return $ SingleContentSlide title content
+    SingleContentSlide title <$> slideContentParser
 
 -- | Parser for a level 2 markdown heading.
 heading2Parser :: Parser Text
 heading2Parser = between
-    (emptyLine >> string "## ")
+    (string "## ")
     (optional eol)
     nonTag
 
@@ -134,10 +127,10 @@ bulletListParser indent = emptyLine >> BulletListContent . BulletList <$>
 -- | Parser for an item in a bullet list.
 bulletListItemParser :: Int -> Char -> Parser BulletListItem
 bulletListItemParser indent bulletChar = do
-    _ <- string $ T.pack $ (replicate indent ' ') ++ [bulletChar, ' ']
+    _ <- string $ T.pack $ replicate indent ' ' ++ [bulletChar, ' ']
     itemText <- plainTextBlock <$> continuedLine (indent + 2)
     _ <- optional eol
-    sublist <- (fmap $ fmap BulletList) $ optional $ choice $ map
+    sublist <- fmap (fmap BulletList) $ optional $ choice $ map
         (NE.some . bulletListItemParser (indent + 2))
         ['-', '*', '+']
     return $ BulletListItem itemText sublist
@@ -166,7 +159,7 @@ nonTag = lookAhead (noneOf ['#', '@', ' ']) >> restOfLine
 
 -- | Parser for an empty line.
 emptyLine :: Parser ()
-emptyLine = hspace >> choice [eof, void eol]
+emptyLine = hspace >> void eol -- choice [eof, void eol]
 
 -- | Parser for Text until EOL.
 restOfLine :: Parser Text
@@ -184,5 +177,5 @@ continuedLine indentationLevel = do
         Just c -> T.unwords [first, c]
   where
     continuationMatch =
-        (string $ T.pack $ '\n' : replicate indentationLevel ' ') >>
-            (lookAhead (noneOf ['-', '*', '+']))
+        string (T.pack $ '\n' : replicate indentationLevel ' ') >>
+            lookAhead (noneOf ['-', '*', '+'])
