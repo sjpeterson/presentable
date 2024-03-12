@@ -64,12 +64,12 @@ handleError = T.pack . errorBundlePretty
 slideshowParser :: Parser Slideshow
 slideshowParser = do
     copyright <- optional copyrightParser
-    title <- heading1Parser
+    title <- many emptyLine >> heading1Parser
     subtitle <- many emptyLine >> optional (try nonTag)
     _ <- optional eol
     let titleSlide = TitleSlide title subtitle
     slides <- many (many emptyLine >> slideParser)
-    _ <- eof
+    _ <- many emptyLine >> eof
     return $ Slideshow copyright (titleSlide :| slides)
 
 -- | Parser for a level 1 markdown heading.
@@ -157,7 +157,8 @@ textBlockParser =
 -- | Parser for the content of an empty slide.
 noContentParser :: Parser SlideContent
 noContentParser =
-    lookAhead (space >> try eof <|> void (char '#'))
+    many emptyLine
+        >> lookAhead (space >> try eof <|> void (char '#'))
         >> return NoContent
 
 -- ------- --

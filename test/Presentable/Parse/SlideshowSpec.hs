@@ -111,6 +111,9 @@ spec = do
         it "parses mixed slides" $ do
             parseSlideshow' testSlideshowMixedSlides
                 `shouldBe` Right expectedSlideshowMixedSlides
+        it "parses mixed slides with additional empty lines" $ do
+            parseSlideshow' testSlideshowMixedSlidesEmptyLines
+                `shouldBe` Right expectedSlideshowMixedSlides
   where
     parseSlideshow' = parseSlideshow ""
     testSlideshowTitleOnly = "# Slideshow Title"
@@ -224,6 +227,28 @@ spec = do
             , "- Second item"
             , " "
             , "## Second Empty Slide"
+            ]
+    testSlideshowMixedSlidesEmptyLines =
+        T.unlines
+            [ "@copyright 2020-2022 Author Authorson"
+            , " "
+            , ""
+            , "# Slideshow"
+            , " "
+            , "\t"
+            , "...with a subtitle"
+            , " "
+            , "## Empty Slide"
+            , " "
+            , "## List Slide"
+            , ""
+            , "- First item"
+            , "- Second item"
+            , " "
+            , "## Second Empty Slide"
+            , ""
+            , ""
+            , ""
             ]
     expectedSlideshowMixedSlides =
         Slideshow
