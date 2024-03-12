@@ -5,6 +5,7 @@ module Presentable.Parse.Slideshow (
     parseSlide,
 ) where
 
+import Control.Monad (unless)
 import qualified Control.Monad.Combinators.NonEmpty as NE
 import Data.Bifunctor (first)
 import Data.Functor (void)
@@ -118,22 +119,25 @@ heading2Parser =
 -- | Parser for slide contents.
 slideContentParser :: Parser SlideContent
 slideContentParser =
-    try (bulletListParser 0)
+    try bulletListParser
         <|> try plainTextParser
         <|> try noContentParser
 
+bulletMarkers :: [Char]
+bulletMarkers = ['-', '*', '+']
+
 -- | Parser for a bullet list.
-bulletListParser :: Int -> Parser SlideContent
-bulletListParser indent =
+bulletListParser :: Parser SlideContent
+bulletListParser =
     emptyLine
         >> BulletListContent . BulletList
-            <$> choice (map (NE.some . bulletListItemParser indent) ['-', '*', '+'])
+            <$> choice (map (NE.some . bulletListItemParser 0) bulletMarkers)
 
 -- | Parser for an item in a bullet list.
 bulletListItemParser :: Int -> Char -> Parser BulletListItem
 bulletListItemParser indent bulletChar = do
     _ <- string $ T.pack $ replicate indent ' ' ++ [bulletChar, ' ']
-    itemText <- plainTextBlock <$> continuedLine (indent + 2)
+    itemText <- plainTextBlock <$> continuedLine (indent + 2) True
     _ <- optional eol
     sublist <-
         fmap (fmap BulletList) $
@@ -141,7 +145,7 @@ bulletListItemParser indent bulletChar = do
                 choice $
                     map
                         (NE.some . bulletListItemParser (indent + 2))
-                        ['-', '*', '+']
+                        bulletMarkers
     return $ BulletListItem itemText sublist
 
 -- | Parser for plain text slide content.
@@ -152,7 +156,7 @@ plainTextParser = PlainTextContent <$> NE.some textBlockParser
 textBlockParser :: Parser TextBlock
 textBlockParser =
     plainTextBlock
-        <$> between emptyLine (optional eol) (continuedLine 0)
+        <$> between emptyLine (optional eol) (continuedLine 0 True)
 
 -- | Parser for the content of an empty slide.
 noContentParser :: Parser SlideContent
@@ -178,13 +182,14 @@ restOfLine :: Parser Text
 restOfLine = T.strip . T.pack <$> some (anySingleBut '\n')
 
 -- | Creates a parser for lines with continuation.
-continuedLine :: Int -> Parser Text
-continuedLine indentationLevel = do
-    _ <- lookAhead $ noneOf ['-', '*', '+', '#']
+continuedLine :: Int -> Bool -> Parser Text
+continuedLine indentationLevel firstLine = do
+    void $ lookAhead $ anySingleBut '#'
+    unless firstLine (void $ lookAhead $ noneOf ['-', '*', '+'])
     first <- T.strip . T.pack <$> some (anySingleBut '\n')
     continuation <-
         optional $
-            try (continuationMatch >> continuedLine indentationLevel)
+            try (continuationMatch >> continuedLine indentationLevel False)
     return $ case continuation of
         Nothing -> first
         Just c -> T.unwords [first, c]
